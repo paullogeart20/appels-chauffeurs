@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plateforme Appels Chauffeurs</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0e14;--s1:#13161f;--s2:#181c28;--s3:#1e2335;
+  --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.11);--b3:rgba(255,255,255,0.18);
+  --tx:#dde2f0;--tx2:#8892aa;--tx3:#4a5268;
+  --blue:#4f8ef7;--blue-bg:rgba(79,142,247,0.1);--blue-br:rgba(79,142,247,0.3);
+  --green:#34d399;--green-bg:rgba(52,211,153,0.1);--green-br:rgba(52,211,153,0.3);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);--amber-br:rgba(251,191,36,0.3);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);--red-br:rgba(248,113,113,0.3);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);
+  --r:8px;--r2:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:13px;line-height:1.5;min-height:100vh;overflow:hidden;}
+/* ── Layout ── */
+.app{display:grid;grid-template-columns:260px 1fr;height:100vh;}
+/* ── Sidebar ── */
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;}
+.sb-head{padding:16px;border-bottom:1px solid var(--b1);}
+.sb-logo{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+.pulse{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pls 2s infinite;}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.3}}
+.sb-sub{font-size:11px;color:var(--tx3);}
+.sb-search{padding:10px 12px;border-bottom:1px solid var(--b1);}
+.sb-search input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:7px 10px;color:var(--tx);font-family:inherit;font-size:12px;outline:none;}
+.sb-search input:focus{border-color:var(--blue);}
+.sb-search input::placeholder{color:var(--tx3);}
+.sb-filters{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--b1);}
+.sb-filter{flex:1;padding:5px 4px;font-size:10px;font-weight:500;font-family:inherit;background:transparent;border:1px solid var(--b1);border-radius:6px;color:var(--tx3);cursor:pointer;transition:.12s;}
+.sb-filter.on{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
+.sb-filter:hover:not(.on){background:var(--s2);}
+.drv-list{flex:1;overflow-y:auto;padding:6px;}
+.drv-list::-webkit-scrollbar{width:3px;}
+.drv-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+.drv-card{padding:9px 11px;border-radius:var(--r);cursor:pointer;border:1px solid transparent;margin-bottom:2px;transition:.1s;}
+.drv-card:hover{background:var(--s2);border-color:var(--b1);}
+.drv-card.sel{background:var(--blue-bg);border-color:var(--blue-br);}
+.drv-top{display:flex;justify-content:space-between;align-items:center;}
+.drv-name{font-size:12px;font-weight:500;}
+.pill{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.p-a{background:var(--blue-bg);color:var(--blue);}
+.p-r{background:var(--amber-bg);color:var(--amber);}
+.p-s{background:var(--green-bg);color:var(--green);}
+.p-i{background:var(--red-bg);color:var(--red);}
+.p-x{background:rgba(255,255,255,.05);color:var(--tx3);}
+.drv-meta{font-size:10px;color:var(--tx3);margin-top:2px;}
+.sb-foot{padding:10px 14px;border-top:1px solid var(--b1);}
+.prog-row{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-bottom:5px;}
+.prog-bar{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .4s;}
+/* ── Main ── */
+.main{display:flex;flex-direction:column;overflow:hidden;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-bottom:1px solid var(--b1);background:var(--s1);gap:10px;flex-shrink:0;}
+.kpis{display:flex;gap:6px;}
+.kpi{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);font-size:11px;}
+.kn{font-weight:600;font-family:'DM Mono',monospace;}
+.kl{color:var(--tx3);}
+.tbr{display:flex;gap:6px;}
+.btn{padding:5px 12px;border-radius:var(--r);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--b2);background:var(--s2);color:var(--tx);transition:.12s;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
+.btn:hover{background:var(--s1);border-color:var(--b3);}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-green{background:var(--green);border-color:var(--green);color:#0c0e14;font-weight:600;}
+.btn-green:hover{opacity:.88;}
+.content{flex:1;overflow:hidden;position:relative;}
+/* ── Empty ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--tx3);}
+.empty-ico{font-size:36px;opacity:.2;}
+.empty-t{font-size:14px;font-weight:500;color:var(--tx2);}
+/* ── Panel ── */
+.panel{display:none;height:100%;grid-template-columns:300px 1fr;overflow:hidden;}
+.panel.vis{display:grid;}
+.panel-head{padding:13px 20px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;grid-column:1/-1;background:var(--s1);}
+.av{width:36px;height:36px;border-radius:50%;background:var(--blue-bg);border:1px solid var(--blue-br);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);flex-shrink:0;}
+.pn{font-size:14px;font-weight:600;}
+.pm{font-size:11px;color:var(--tx3);margin-top:1px;}
+.pacts{display:flex;gap:6px;align-items:center;}
+/* Left pane */
+.pleft{border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;}
+/* need full panel to be a grid with rows for header + body */
+.panel-inner{display:grid;grid-template-rows:auto 1fr;grid-template-columns:300px 1fr;height:100%;}
+.panel-inner .panel-head{grid-column:1/-1;grid-row:1;}
+.panel-body{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:300px 1fr;overflow:hidden;}
+.tabs{display:flex;border-bottom:1px solid var(--b1);flex-shrink:0;}
+.tab{flex:1;padding:9px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;color:var(--tx3);border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;transition:.12s;}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue);}
+.tab:hover:not(.on){color:var(--tx2);}
+.tpane{flex:1;overflow-y:auto;padding:14px;}
+.tpane::-webkit-scrollbar{width:3px;}
+.tpane::-webkit-scrollbar-thumb{background:var(--b2);}
+/* Script */
+.sblk{margin-bottom:12px;border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;}
+.sblk-h{padding:7px 11px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.sblk-h.blue{background:var(--blue-bg);color:var(--blue);}
+.sblk-h.green{background:var(--green-bg);color:var(--green);}
+.sblk-h.purple{background:var(--purple-bg);color:var(--purple);}
+.sblk-h.amber{background:var(--amber-bg);color:var(--amber);}
+.sblk-b{padding:8px 11px;display:flex;flex-direction:column;gap:5px;}
+.sl{font-size:11px;line-height:1.5;color:var(--tx2);padding:5px 8px;border-radius:5px;background:var(--s2);}
+.sl.q{color:var(--tx);font-style:italic;}
+.sl.act{color:var(--blue);font-size:10px;}
+/* Log */
+.lg-form{display:flex;flex-direction:column;gap:10px;}
+.fgrp{display:flex;flex-direction:column;gap:3px;}
+.flbl{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;}
+.fsel,.finp{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:6px 10px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;width:100%;transition:.12s;}
+.fsel:focus,.finp:focus{border-color:var(--blue);}
+.fsel option{background:var(--s2);}
+.att{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);}
+.att-lbl{font-size:10px;color:var(--tx3);font-weight:500;text-transform:uppercase;letter-spacing:.04em;grid-column:1/-1;}
+/* Form pane */
+.pright{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.fbar{padding:9px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;background:var(--s1);flex-shrink:0;}
+.fdot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.farea{flex:1;overflow-y:auto;padding:20px 24px;}
+.farea::-webkit-scrollbar{width:4px;}
+.farea::-webkit-scrollbar-thumb{background:var(--b2);}
+/* Questionnaire */
+.q-driver-badge{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r2);padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.q-driver-id{font-family:'DM Mono',monospace;font-size:12px;color:var(--blue);font-weight:500;}
+.q-progress{margin-bottom:20px;}
+.q-prog-bar{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;margin-top:6px;}
+.q-prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;}
+.q-block{margin-bottom:24px;}
+.q-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--b1);}
+.q-item{margin-bottom:16px;}
+.q-label{font-size:13px;font-weight:500;color:var(--tx);margin-bottom:8px;line-height:1.4;}
+.q-label span.req{color:var(--red);margin-left:2px;}
+/* Scale */
+.scale{display:flex;gap:4px;}
+.scale-btn{flex:1;padding:7px 4px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--tx3);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-align:center;transition:.1s;font-weight:500;}
+.scale-btn:hover{background:var(--s3);border-color:var(--b2);color:var(--tx);}
+.scale-btn.sel{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
+.scale-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-top:4px;}
+/* Stars */
+.stars{display:flex;gap:6px;}
+.star-btn{font-size:22px;cursor:pointer;color:var(--tx3);transition:.1s;background:none;border:none;padding:0;}
+.star-btn:hover,.star-btn.sel{color:var(--amber);}
+/* Choices */
+.choices{display:flex;flex-direction:column;gap:5px;}
+.choice{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;transition:.1s;}
+.choice:hover{background:var(--s3);border-color:var(--b2);}
+.choice.sel{background:var(--blue-bg);border-color:var(--blue-br);}
+.choice input{display:none;}
+.choice-mark{width:14px;height:14px;border:1px solid var(--b3);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:.1s;}
+.choice.radio .choice-mark{border-radius:50%;}
+.choice.sel .choice-mark{background:var(--blue);border-color:var(--blue);color:#fff;}
+.choice-text{font-size:12px;color:var(--tx2);}
+.choice.sel .choice-text{color:var(--tx);}
+/* Submit */
+.q-submit{margin-top:24px;padding-top:16px;border-top:1px solid var(--b1);}
+.q-submit-btn{width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--r2);font-family:inherit;font-size:13px;font-weight:600;color:#0c0e14;cursor:pointer;transition:.12s;}
+.q-submit-btn:hover{opacity:.88;}
+.q-submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* Success */
+.q-success{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;text-align:center;padding:40px;}
+.q-success-ico{font-size:48px;}
+.q-success-t{font-size:16px;font-weight:600;}
+.q-success-s{font-size:12px;color:var(--tx3);max-width:260px;line-height:1.6;}
+/* Dashboard */
+.dash{display:none;position:absolute;inset:0;background:var(--bg);z-index:40;overflow-y:auto;padding:24px;}
+.dash.vis{display:block;}
+.dash-close{position:absolute;top:16px;right:16px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:5px 12px;color:var(--tx2);cursor:pointer;font-family:inherit;font-size:12px;}
+.dash-close:hover{background:var(--s1);}
+.dash-t{font-size:18px;font-weight:600;margin-bottom:16px;}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.dash-kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:14px;}
+.dk-l{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.dk-n{font-size:26px;font-weight:600;font-family:'DM Mono',monospace;}
+.dash-st{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:16px;}
+.dash-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.dash-tbl th{text-align:left;padding:7px 10px;font-size:10px;font-weight:500;color:var(--tx3);border-bottom:1px solid var(--b1);}
+.dash-tbl td{padding:8px 10px;border-bottom:1px solid var(--b1);color:var(--tx2);}
+.dash-tbl tr:last-child td{border-bottom:none;}
+.dash-tbl tr:hover td{background:var(--s2);}
+/* Alert */
+.alert{display:none;align-items:center;gap:7px;padding:7px 14px;background:var(--amber-bg);border-bottom:1px solid var(--amber-br);font-size:11px;color:var(--amber);font-weight:500;flex-shrink:0;}
+.alert.vis{display:flex;}
+/* Toast */
+.toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:99;pointer-events:none;}
+.toast{padding:8px 14px;border-radius:var(--r);font-size:12px;font-weight:500;border:1px solid var(--b2);animation:tin .18s ease;pointer-events:all;}
+@keyframes tin{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.s{background:var(--green-bg);border-color:var(--green-br);color:var(--green);}
+.toast.i{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
+.toast.w{background:var(--amber-bg);border-color:var(--amber-br);color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><div class="pulse"></div>Appels Chauffeurs</div>
+    <div class="sb-sub" id="dt"></div>
+  </div>
+  <div class="sb-search"><input type="text" placeholder="Rechercher..." id="srch" oninput="filt()"></div>
+  <div class="sb-filters">
+    <button class="sb-filter on" onclick="setF('all',this)">Tous</button>
+    <button class="sb-filter" onclick="setF('a',this)">À appeler</button>
+    <button class="sb-filter" onclick="setF('r',this)">Rappels</button>
+    <button class="sb-filter" onclick="setF('s',this)">Faits</button>
+  </div>
+  <div class="drv-list" id="drv-list"></div>
+  <div class="sb-foot">
+    <div class="prog-row"><span id="prog-t">0 / 0</span><span id="prog-p" style="color:var(--green)">0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-f" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="kpis">
+      <div class="kpi"><span class="kn" id="kt" style="color:var(--blue)">—</span><span class="kl">total</span></div>
+      <div class="kpi"><span class="kn" id="kd" style="color:var(--green)">—</span><span class="kl">complétés</span></div>
+      <div class="kpi"><span class="kn" id="kr" style="color:var(--amber)">—</span><span class="kl">rappels</span></div>
+    </div>
+    <div class="tbr">
+      <button class="btn" onclick="loadDrivers()">↺ Sync</button>
+      <button class="btn" onclick="showDash()">📊 Dashboard</button>
+      <a href="https://docs.google.com/spreadsheets/d/1dXHKRl6v94x5WG9Tk_jtKtLNjkfeXLKy7f1Awm2WuVE/edit" target="_blank" class="btn">GSheet ↗</a>
+    </div>
+  </div>
+  <div class="alert" id="alrt"><span>⚠</span><span id="alrt-t"></span></div>
+
+  <div class="content">
+    <!-- Empty -->
+    <div class="empty" id="empty">
+      <div class="empty-ico">📞</div>
+      <div class="empty-t">Sélectionnez un chauffeur</div>
+      <div style="font-size:12px;color:var(--tx3);text-align:center;max-width:240px;margin-top:4px;">Choisissez un chauffeur dans la liste pour démarrer l'appel et remplir le questionnaire.</div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel-inner" id="panel" style="display:none;height:100%;">
+      <div class="panel-head">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="av" id="pav">--</div>
+          <div>
+            <div class="pn" id="pn">—</div>
+            <div class="pm" id="pm">—</div>
+          </div>
+        </div>
+        <div class="pacts">
+          <span class="pill p-a" id="ppill">🟣 À appeler</span>
+          <button class="btn" onclick="doCall()">📞 Appeler</button>
+          <button class="btn btn-green" onclick="markDone()">✅ Appel complété</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <!-- Left -->
+        <div class="pleft">
+          <div class="tabs">
+            <button class="tab on" onclick="swTab('script',this)">Script</button>
+            <button class="tab" onclick="swTab('log',this)">Suivi appel</button>
+          </div>
+
+          <!-- Script -->
+          <div class="tpane" id="tp-script">
+            <div class="sblk">
+              <div class="sblk-h blue">1 — Accroche</div>
+              <div class="sblk-b">
+                <div class="sl q">« Bonjour <strong id="s1" style="color:var(--blue);font-style:normal"></strong>, c'est [Votre prénom] de [Entreprise]. »</div>
+                <div class="sl q">« J'appelle nos chauffeurs pour prendre de vos nouvelles — 5 min. Vous avez un moment ? »</div>
+                <div class="sl act">→ NON : noter rappel dans "Suivi appel"</div>
+                <div class="sl act">→ MESSAGERIE : Résultat = Messagerie</div>
+              </div>
+            </div>
+            <div class="sblk">
+              <div class="sblk-h green">2 — Questionnaire</div>
+              <div class="sblk-b">
+                <div class="sl q">« Je vais vous poser quelques questions directement. »</div>
+                <div class="sl act">→ Remplir le formulaire à droite pendant l'appel</div>
+                <div class="sl act">→ ID chauffeur : <span id="s2id" style="color:var(--green);font-family:'DM Mono';font-weight:500"></span></div>
+              </div>
+            </div>
+            <div class="sblk">
+              <div class="sblk-h purple">3 — Clôture</div>
+              <div class="sblk-b">
+                <div class="sl q">« Merci <strong id="s3" style="color:var(--purple);font-style:normal"></strong>, c'est vraiment utile. »</div>
+                <div class="sl q">« N'hésitez pas à contacter <span id="s3sup" style="color:var(--purple)"></span> si besoin. »</div>
+                <div class="sl act">→ Soumettre le formulaire → cliquer "Appel complété"</div>
+              </div>
+            </div>
+            <div class="sblk">
+              <div class="sblk-h amber">Objections</div>
+              <div class="sblk-b">
+                <div class="sl">« Pas le temps » → <span style="color:var(--tx)">« 5 min chrono ! »</span></div>
+                <div class="sl">« Ça sert à quoi ? » → <span style="color:var(--tx)">« Retours remontent à la direction. »</span></div>
+                <div class="sl">« Je préfère pas » → <span style="color:var(--red)">Statut ⚫ Refus</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Log -->
+          <div class="tpane" id="tp-log" style="display:none">
+            <div class="lg-form">
+              <div class="fgrp">
+                <div class="flbl">Statut</div>
+                <select class="fsel" id="lg-st" onchange="updPill()">
+                  <option>🟣 À appeler</option>
+                  <option>🟡 Rappeler</option>
+                  <option>✅ Typeform soumis</option>
+                  <option>🔴 Injoignable</option>
+                  <option>⚫ Refus</option>
+                </select>
+              </div>
+              <div style="font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;">Tentatives</div>
+              <div class="att">
+                <div class="att-lbl">Tentative 1</div>
+                <div class="fgrp"><div class="flbl">Date</div><input type="date" class="finp" id="ld1"></div>
+                <div class="fgrp"><div class="flbl">Résultat</div>
+                  <select class="fsel" id="lr1"><option value="">—</option><option>Répondu</option><option>Pas répondu</option><option>Messagerie</option><option>Rappel demandé</option></select>
+                </div>
+              </div>
+              <div class="att">
+                <div class="att-lbl">Tentative 2</div>
+                <div class="fgrp"><div class="flbl">Date</div><input type="date" class="finp" id="ld2"></div>
+                <div class="fgrp"><div class="flbl">Résultat</div>
+                  <select class="fsel" id="lr2"><option value="">—</option><option>Répondu</option><option>Pas répondu</option><option>Messagerie</option><option>Rappel demandé</option></select>
+                </div>
+              </div>
+              <div class="att">
+                <div class="att-lbl">Tentative 3</div>
+                <div class="fgrp"><div class="flbl">Date</div><input type="date" class="finp" id="ld3"></div>
+                <div class="fgrp"><div class="flbl">Résultat</div>
+                  <select class="fsel" id="lr3"><option value="">—</option><option>Répondu</option><option>Pas répondu</option><option>Messagerie</option><option>Rappel demandé</option></select>
+                </div>
+              </div>
+              <div class="fgrp">
+                <div class="flbl">Notes</div>
+                <input type="text" class="finp" id="lg-notes" placeholder="Remarques...">
+              </div>
+              <button class="btn btn-primary" onclick="savelog()" style="width:100%;justify-content:center;">Enregistrer</button>
+              <div id="sfb" style="font-size:11px;color:var(--green);text-align:center;display:none;">✓ Enregistré en local</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: questionnaire -->
+        <div class="pright">
+          <div class="fbar">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;">
+              <div class="fdot"></div>
+              <span id="fbar-lbl">Questionnaire</span>
+            </div>
+            <button class="btn" onclick="resetForm()">↺ Réinitialiser</button>
+          </div>
+          <div class="farea" id="farea">
+
+            <!-- Driver badge -->
+            <div class="q-driver-badge">
+              <div class="av" id="qav" style="width:30px;height:30px;font-size:10px;">--</div>
+              <div>
+                <div style="font-size:12px;font-weight:600;" id="qname">—</div>
+                <div style="font-size:10px;color:var(--tx3);" id="qmeta">—</div>
+              </div>
+              <div style="margin-left:auto;"><span class="q-driver-id" id="qid">—</span></div>
+            </div>
+
+            <!-- Progress -->
+            <div class="q-progress">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);">
+                <span>Progression</span><span id="qpct">0 / 11</span>
+              </div>
+              <div class="q-prog-bar"><div class="q-prog-fill" id="qpf" style="width:0%"></div></div>
+            </div>
+
+            <!-- Section 1 -->
+            <div class="q-block">
+              <div class="q-section">Bloc 1 — Satisfaction générale</div>
+
+              <div class="q-item" id="qi1">
+                <div class="q-label">Note globale — Sur 10, comment évaluez-vous votre expérience chez nous ?<span class="req">*</span></div>
+                <div class="scale" id="sc1"></div>
+                <div class="scale-labels"><span>Très insatisfait</span><span>Très satisfait</span></div>
+              </div>
+
+              <div class="q-item" id="qi2">
+                <div class="q-label">Ce qui fonctionne bien — Quels aspects vous satisfont le plus ?<span class="req">*</span></div>
+                <div class="choices" id="ch2">
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">L'autonomie au travail</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La rémunération</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le planning et les horaires</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le matériel / véhicule</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">L'ambiance d'équipe</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La relation avec mon superviseur</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La communication interne</div></label>
+                  <label class="choice" onclick="chk(this,'ch2')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La sécurité au travail</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi3">
+                <div class="q-label">Ce qui doit être amélioré — Quels aspects sont les plus insatisfaisants ?<span class="req">*</span></div>
+                <div class="choices" id="ch3">
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La rémunération</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La charge de travail / planning subi</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le matériel / véhicule en mauvais état</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le manque de communication</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le manque de reconnaissance</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Les problèmes de sécurité</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Les relations d'équipe difficiles</div></label>
+                  <label class="choice" onclick="chk(this,'ch3')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le manque de flexibilité</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi4">
+                <div class="q-label">Charge de travail — Comment évaluez-vous votre charge et votre planning ?<span class="req">*</span></div>
+                <div class="choices" id="ch4">
+                  <label class="choice radio" onclick="radio(this,'ch4')"><div class="choice-mark"></div><div class="choice-text">Très bien équilibré</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch4')"><div class="choice-mark"></div><div class="choice-text">Acceptable</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch4')"><div class="choice-mark"></div><div class="choice-text">Parfois trop lourd</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch4')"><div class="choice-mark"></div><div class="choice-text">Régulièrement excessif</div></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2 -->
+            <div class="q-block">
+              <div class="q-section">Bloc 2 — Relation avec le superviseur</div>
+
+              <div class="q-item" id="qi5">
+                <div class="q-label">Note superviseur — Sur 5 étoiles, comment évaluez-vous votre superviseur ?<span class="req">*</span></div>
+                <div class="stars" id="st5"></div>
+              </div>
+
+              <div class="q-item" id="qi6">
+                <div class="q-label">Disponibilité — Votre superviseur est-il disponible quand vous en avez besoin ?<span class="req">*</span></div>
+                <div class="choices" id="ch6">
+                  <label class="choice radio" onclick="radio(this,'ch6')"><div class="choice-mark"></div><div class="choice-text">Toujours disponible</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch6')"><div class="choice-mark"></div><div class="choice-text">Souvent disponible</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch6')"><div class="choice-mark"></div><div class="choice-text">Parfois disponible</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch6')"><div class="choice-mark"></div><div class="choice-text">Rarement disponible</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi7">
+                <div class="q-label">Points de friction — Comment se passent vos échanges avec votre superviseur ?<span class="req">*</span></div>
+                <div class="choices" id="ch7">
+                  <label class="choice radio" onclick="radio(this,'ch7')"><div class="choice-mark"></div><div class="choice-text">Je peux tout aborder librement</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch7')"><div class="choice-mark"></div><div class="choice-text">Il y a parfois des blocages</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch7')"><div class="choice-mark"></div><div class="choice-text">C'est souvent compliqué</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch7')"><div class="choice-mark"></div><div class="choice-text">Je n'ose pas aborder certains sujets</div></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3 -->
+            <div class="q-block">
+              <div class="q-section">Bloc 3 — Préoccupations et projection</div>
+
+              <div class="q-item" id="qi8">
+                <div class="q-label">Préoccupations actuelles — Quels sujets vous préoccupent en ce moment ?<span class="req">*</span></div>
+                <div class="choices" id="ch8">
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Aucun sujet particulier</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La rémunération / les primes</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">La sécurité au travail</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le matériel / véhicule défaillant</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Le planning imposé</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Les relations d'équipe</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Mon avenir dans l'entreprise</div></label>
+                  <label class="choice" onclick="chk(this,'ch8')"><input type="checkbox"><div class="choice-mark">✓</div><div class="choice-text">Un problème non résolu avec ma hiérarchie</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi9">
+                <div class="q-label">Projection — Comment vous voyez-vous dans 12 mois ?<span class="req">*</span></div>
+                <div class="choices" id="ch9">
+                  <label class="choice radio" onclick="radio(this,'ch9')"><div class="choice-mark"></div><div class="choice-text">Je me vois encore là et j'envisage de rester longtemps</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch9')"><div class="choice-mark"></div><div class="choice-text">Je ne sais pas encore</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch9')"><div class="choice-mark"></div><div class="choice-text">Je pense chercher autre chose</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi10">
+                <div class="q-label">Recommandation — Recommanderiez-vous à un ami de nous rejoindre ?<span class="req">*</span></div>
+                <div class="choices" id="ch10">
+                  <label class="choice radio" onclick="radio(this,'ch10')"><div class="choice-mark"></div><div class="choice-text">Oui, sans hésitation</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch10')"><div class="choice-mark"></div><div class="choice-text">Probablement oui</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch10')"><div class="choice-mark"></div><div class="choice-text">Probablement non</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch10')"><div class="choice-mark"></div><div class="choice-text">Non</div></label>
+                </div>
+              </div>
+
+              <div class="q-item" id="qi11">
+                <div class="q-label">Priorité d'action — Si on devait agir sur UNE seule chose, ce serait :<span class="req">*</span></div>
+                <div class="choices" id="ch11">
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Revaloriser la rémunération</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Améliorer le matériel / véhicule</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Mieux communiquer les décisions</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Plus de flexibilité dans le planning</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Mieux reconnaître le travail fourni</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Améliorer la sécurité</div></label>
+                  <label class="choice radio" onclick="radio(this,'ch11')"><div class="choice-mark"></div><div class="choice-text">Mieux soutenir via les superviseurs</div></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="q-submit">
+              <button class="q-submit-btn" id="qsbtn" onclick="submitForm()">Soumettre les réponses →</button>
+              <div style="font-size:10px;color:var(--tx3);text-align:center;margin-top:8px;">Les réponses seront enregistrées dans le Google Sheet</div>
+            </div>
+
+            <!-- Success -->
+            <div class="q-success" id="qsuc">
+              <div class="q-success-ico">✅</div>
+              <div class="q-success-t">Réponses enregistrées</div>
+              <div class="q-success-s" id="qsuc-sub">Les réponses ont été soumises avec succès.</div>
+              <button class="btn btn-primary" onclick="resetForm()">Nouvel appel →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dash" id="dash">
+      <button class="dash-close" onclick="hideDash()">✕ Fermer</button>
+      <div class="dash-t">Dashboard — Suivi en temps réel</div>
+      <div class="dash-grid" id="dk"></div>
+      <div class="dash-st">Par statut</div>
+      <table class="dash-tbl" id="dst"></table>
+      <div class="dash-st">Par superviseur</div>
+      <table class="dash-tbl" id="dsup"></table>
+      <div class="dash-st">Rappels en attente</div>
+      <table class="dash-tbl" id="drapp"></table>
+    </div>
+  </div>
+</div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────
+// Replace with your Apps Script Web App URL after deployment
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const SHEET_ID = '1dXHKRl6v94x5WG9Tk_jtKtLNjkfeXLKy7f1Awm2WuVE';
+const SHEET_CSV = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=%F0%9F%93%8B%20CRM`;
+
+let drivers=[], cur=null, actF='all', srchT='', formAnswers={};
+
+// ── Init ──
+document.getElementById('dt').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+buildScale();
+buildStars();
+
+function buildScale(){
+  const c=document.getElementById('sc1');
+  for(let i=1;i<=10;i++){
+    const b=document.createElement('button');
+    b.className='scale-btn';b.textContent=i;b.dataset.v=i;
+    b.onclick=()=>{
+      c.querySelectorAll('.scale-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      formAnswers.q1=i;updProg();
+    };
+    c.appendChild(b);
+  }
+}
+
+function buildStars(){
+  const c=document.getElementById('st5');
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('button');
+    b.className='star-btn';b.textContent='★';b.dataset.v=i;
+    b.onclick=()=>{
+      c.querySelectorAll('.star-btn').forEach((x,j)=>{x.classList.toggle('sel',j<i);});
+      formAnswers.q5=i;updProg();
+    };
+    c.appendChild(b);
+  }
+}
+
+function chk(el,gid){
+  el.classList.toggle('sel');
+  const vals=[...document.querySelectorAll(`#${gid} .choice.sel`)].map(c=>c.querySelector('.choice-text').textContent);
+  const k='q'+gid.replace('ch','');
+  formAnswers[k]=vals;
+  updProg();
+}
+
+function radio(el,gid){
+  document.querySelectorAll(`#${gid} .choice`).forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const k='q'+gid.replace('ch','');
+  formAnswers[k]=el.querySelector('.choice-text').textContent;
+  updProg();
+}
+
+function updProg(){
+  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11'];
+  const done=keys.filter(k=>{
+    const v=formAnswers[k];
+    return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
+  }).length;
+  document.getElementById('qpct').textContent=`${done} / 11`;
+  document.getElementById('qpf').style.width=`${Math.round(done/11*100)}%`;
+  document.getElementById('qsbtn').disabled=done<11;
+}
+
+// ── Drivers ──
+async function loadDrivers(){
+  toast('Synchronisation...','i');
+  try{
+    const r=await fetch(SHEET_CSV);
+    if(!r.ok)throw new Error();
+    const t=await r.text();
+    const p=parseCSV(t);
+    if(p.length){drivers=p;toast(`${p.length} chauffeurs chargés`,'s');}
+    else throw new Error();
+  }catch{
+    loadFallback();toast('Mode démonstration — connectez le GSheet public','w');
+  }
+  renderList();updKPIs();
+}
+
+function parseCSV(txt){
+  const lines=txt.trim().split('\n');if(lines.length<3)return[];
+  const res=[];
+  for(let i=2;i<lines.length;i++){
+    const c=lines[i].split(',').map(x=>x.replace(/^"|"$/g,'').trim());
+    if(!c[0]||!c[0].startsWith('CHF'))continue;
+    res.push({id:c[0],nom:c[1],prenom:c[2],tel:c[3],sen:c[4],sup:c[5],statut:c[6]||'🟣 À appeler',nb:parseInt(c[7])||0,d1:c[8],r1:c[9],d2:c[10],r2:c[11],d3:c[12],r3:c[13],notes:c[14]||''});
+  }
+  return res;
+}
+
+function loadFallback(){
+  drivers=[
+    {id:'CHF-001',nom:'Martin',prenom:'Lucas',tel:'06 11 22 33 44',sen:'1-3 ans',sup:'Sophie Bernard',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-002',nom:'Dubois',prenom:'Emma',tel:'07 22 33 44 55',sen:'6-12 mois',sup:'Pierre Moreau',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-003',nom:'Petit',prenom:'Nathan',tel:'06 33 44 55 66',sen:'3+ ans',sup:'Sophie Bernard',statut:'✅ Typeform soumis',nb:1,d1:'2025-05-22',r1:'Répondu',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-004',nom:'Durand',prenom:'Léa',tel:'07 44 55 66 77',sen:'< 6 mois',sup:'Jean Dupont',statut:'🟡 Rappeler',nb:1,d1:'2025-05-21',r1:'Pas répondu',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-005',nom:'Leroy',prenom:'Hugo',tel:'06 55 66 77 88',sen:'1-3 ans',sup:'Pierre Moreau',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-006',nom:'Moreau',prenom:'Chloé',tel:'07 66 77 88 99',sen:'6-12 mois',sup:'Jean Dupont',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-007',nom:'Simon',prenom:'Tom',tel:'06 77 88 99 00',sen:'3+ ans',sup:'Sophie Bernard',statut:'🔴 Injoignable',nb:3,d1:'2025-05-19',r1:'Messagerie',d2:'2025-05-20',r2:'Messagerie',d3:'2025-05-21',r3:'Pas répondu',notes:''},
+    {id:'CHF-008',nom:'Laurent',prenom:'Jade',tel:'07 88 99 00 11',sen:'1-3 ans',sup:'Pierre Moreau',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-009',nom:'Michel',prenom:'Axel',tel:'06 99 00 11 22',sen:'< 6 mois',sup:'Jean Dupont',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-010',nom:'Garcia',prenom:'Inès',tel:'07 00 11 22 33',sen:'6-12 mois',sup:'Sophie Bernard',statut:'🟡 Rappeler',nb:1,d1:'2025-05-21',r1:'Rappel demandé',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-011',nom:'Bernard',prenom:'Théo',tel:'06 10 20 30 40',sen:'1-3 ans',sup:'Pierre Moreau',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-012',nom:'Girard',prenom:'Camille',tel:'07 20 30 40 50',sen:'3+ ans',sup:'Jean Dupont',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-013',nom:'Roux',prenom:'Ethan',tel:'06 30 40 50 60',sen:'6-12 mois',sup:'Sophie Bernard',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+    {id:'CHF-014',nom:'Fournier',prenom:'Zoé',tel:'07 40 50 60 70',sen:'< 6 mois',sup:'Pierre Moreau',statut:'⚫ Refus',nb:1,d1:'2025-05-20',r1:'Répondu',d2:'',r2:'',d3:'',r3:'',notes:'Ne souhaite pas participer'},
+    {id:'CHF-015',nom:'Blanc',prenom:'Louis',tel:'06 50 60 70 80',sen:'1-3 ans',sup:'Jean Dupont',statut:'🟣 À appeler',nb:0,d1:'',r1:'',d2:'',r2:'',d3:'',r3:'',notes:''},
+  ];
+}
+
+function pClass(s){
+  if(s.includes('À appeler'))return'p-a';
+  if(s.includes('Rappeler'))return'p-r';
+  if(s.includes('soumis'))return'p-s';
+  if(s.includes('Injoignable'))return'p-i';
+  return'p-x';
+}
+function pShort(s){
+  if(s.includes('À appeler'))return'À appeler';
+  if(s.includes('Rappeler'))return'Rappeler';
+  if(s.includes('soumis'))return'Soumis ✓';
+  if(s.includes('Injoignable'))return'Injoignable';
+  return'Refus';
+}
+
+function getFiltered(){
+  return drivers.filter(d=>{
+    const ms=srchT===''||`${d.nom} ${d.prenom} ${d.id}`.toLowerCase().includes(srchT.toLowerCase());
+    const mf=actF==='all'||(actF==='a'&&d.statut.includes('À appeler'))||(actF==='r'&&d.statut.includes('Rappeler'))||(actF==='s'&&d.statut.includes('soumis'));
+    return ms&&mf;
+  });
+}
+
+function renderList(){
+  const el=document.getElementById('drv-list');
+  const list=getFiltered().sort((a,b)=>{
+    const p=x=>x.statut.includes('Rappeler')?0:x.statut.includes('À appeler')?1:2;
+    return p(a)-p(b);
+  });
+  el.innerHTML='';
+  if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx3);font-size:11px;">Aucun chauffeur</div>';return;}
+  list.forEach(d=>{
+    const div=document.createElement('div');
+    div.className='drv-card'+(cur&&cur.id===d.id?' sel':'');
+    div.onclick=()=>selDriver(d);
+    div.innerHTML=`<div class="drv-top"><span class="drv-name">${d.prenom} ${d.nom}</span><span class="pill ${pClass(d.statut)}">${pShort(d.statut)}</span></div><div class="drv-meta">${d.id} · ${d.sup}</div>`;
+    el.appendChild(div);
+  });
+  const tot=drivers.length,done=drivers.filter(d=>d.statut.includes('soumis')).length;
+  const pct=tot>0?Math.round(done/tot*100):0;
+  document.getElementById('prog-t').textContent=`${done} / ${tot}`;
+  document.getElementById('prog-p').textContent=pct+'%';
+  document.getElementById('prog-f').style.width=pct+'%';
+  const rapp=drivers.filter(d=>d.statut.includes('Rappeler')).length;
+  const ab=document.getElementById('alrt');
+  if(rapp>0){document.getElementById('alrt-t').textContent=`${rapp} rappel(s) en attente — à traiter en priorité`;ab.classList.add('vis');}
+  else ab.classList.remove('vis');
+}
+
+function updKPIs(){
+  document.getElementById('kt').textContent=drivers.length;
+  document.getElementById('kd').textContent=drivers.filter(d=>d.statut.includes('soumis')).length;
+  document.getElementById('kr').textContent=drivers.filter(d=>d.statut.includes('Rappeler')).length;
+}
+
+function selDriver(d){
+  cur=d;renderList();
+  document.getElementById('empty').style.display='none';
+  document.getElementById('panel').style.display='grid';
+  const init=(d.prenom[0]||'')+(d.nom[0]||'');
+  ['pav','qav'].forEach(id=>{document.getElementById(id).textContent=init.toUpperCase();});
+  document.getElementById('pn').textContent=`${d.prenom} ${d.nom}`;
+  document.getElementById('pm').textContent=`${d.id} · ${d.tel} · ${d.sen} · ${d.sup}`;
+  const pill=document.getElementById('ppill');
+  pill.textContent=d.statut;pill.className='pill '+pClass(d.statut);
+  ['s1','s3'].forEach(id=>{document.getElementById(id).textContent=d.prenom;});
+  document.getElementById('s2id').textContent=d.id;
+  document.getElementById('s3sup').textContent=d.sup;
+  document.getElementById('qname').textContent=`${d.prenom} ${d.nom}`;
+  document.getElementById('qmeta').textContent=`${d.sen} · ${d.sup}`;
+  document.getElementById('qid').textContent=d.id;
+  document.getElementById('fbar-lbl').textContent=`Questionnaire — ${d.prenom} ${d.nom}`;
+  document.getElementById('lg-st').value=d.statut;
+  document.getElementById('ld1').value=d.d1;document.getElementById('lr1').value=d.r1;
+  document.getElementById('ld2').value=d.d2;document.getElementById('lr2').value=d.r2;
+  document.getElementById('ld3').value=d.d3;document.getElementById('lr3').value=d.r3;
+  document.getElementById('lg-notes').value=d.notes;
+  resetForm(false);
+}
+
+function resetForm(showToast=true){
+  formAnswers={};
+  document.querySelectorAll('.choice.sel').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.scale-btn.sel').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('.star-btn.sel').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('farea').style.display='block';
+  document.getElementById('qsuc').style.display='none';
+  document.getElementById('qsbtn').disabled=true;
+  updProg();
+  if(showToast)toast('Formulaire réinitialisé','i');
+}
+
+function doCall(){
+  if(!cur)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(!cur.d1){cur.d1=today;document.getElementById('ld1').value=today;}
+  else if(!cur.d2){cur.d2=today;document.getElementById('ld2').value=today;}
+  else if(!cur.d3){cur.d3=today;document.getElementById('ld3').value=today;}
+  swTab('log',null);
+  toast(`📞 ${cur.prenom} ${cur.nom} — ${cur.tel}`,'i');
+}
+
+function updPill(){
+  if(!cur)return;
+  const v=document.getElementById('lg-st').value;
+  cur.statut=v;
+  const p=document.getElementById('ppill');
+  p.textContent=v;p.className='pill '+pClass(v);
+}
+
+function markDone(){
+  if(!cur)return;
+  cur.statut='✅ Typeform soumis';
+  if(!cur.d1)cur.d1=new Date().toISOString().split('T')[0];
+  document.getElementById('lg-st').value='✅ Typeform soumis';
+  updPill();savelog();
+  renderList();updKPIs();
+  toast(`${cur.prenom} ${cur.nom} marqué complété`,'s');
+}
+
+function savelog(){
+  if(!cur)return;
+  cur.statut=document.getElementById('lg-st').value;
+  cur.d1=document.getElementById('ld1').value;cur.r1=document.getElementById('lr1').value;
+  cur.d2=document.getElementById('ld2').value;cur.r2=document.getElementById('lr2').value;
+  cur.d3=document.getElementById('ld3').value;cur.r3=document.getElementById('lr3').value;
+  cur.notes=document.getElementById('lg-notes').value;
+  cur.nb=[cur.r1,cur.r2,cur.r3].filter(Boolean).length;
+  updPill();renderList();updKPIs();
+  const fb=document.getElementById('sfb');fb.style.display='block';
+  setTimeout(()=>fb.style.display='none',2000);
+}
+
+async function submitForm(){
+  if(!cur)return;
+  const btn=document.getElementById('qsbtn');
+  btn.textContent='Envoi en cours...';btn.disabled=true;
+  const payload={
+    driverId:cur.id, nom:cur.nom, prenom:cur.prenom,
+    superviseur:cur.sup, seniorite:cur.sen,
+    date:new Date().toLocaleDateString('fr-FR'),
+    q1:formAnswers.q1||'',
+    q2:Array.isArray(formAnswers.q2)?formAnswers.q2.join(';'):'',
+    q3:Array.isArray(formAnswers.q3)?formAnswers.q3.join(';'):'',
+    q4:formAnswers.q4||'',
+    q5:formAnswers.q5||'',
+    q6:formAnswers.q6||'',
+    q7:formAnswers.q7||'',
+    q8:Array.isArray(formAnswers.q8)?formAnswers.q8.join(';'):'',
+    q9:formAnswers.q9||'',
+    q10:formAnswers.q10||'',
+    q11:formAnswers.q11||'',
+  };
+
+  let success=false;
+  if(APPS_SCRIPT_URL!=='YOUR_APPS_SCRIPT_URL_HERE'){
+    try{
+      await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)});
+      success=true;
+    }catch(e){success=false;}
+  }
+
+  // Toujours marquer comme complété localement
+  cur.statut='✅ Typeform soumis';
+  if(!cur.d1)cur.d1=new Date().toISOString().split('T')[0];
+  if(!cur.r1)cur.r1='Répondu';
+  document.getElementById('lg-st').value='✅ Typeform soumis';
+  updPill();renderList();updKPIs();
+
+  document.getElementById('farea').style.display='none';
+  document.getElementById('qsuc').style.display='flex';
+  document.getElementById('qsuc-sub').textContent=success
+    ?'Réponses enregistrées dans le Google Sheet ✓'
+    :'Appel complété. Pour connecter au GSheet, configurez l\'Apps Script (voir instructions).';
+  toast(success?'Réponses envoyées dans le GSheet !':'Appel complété en local','s');
+}
+
+function setF(f,el){
+  actF=f;
+  document.querySelectorAll('.sb-filter').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');renderList();
+}
+function filt(){srchT=document.getElementById('srch').value;renderList();}
+
+function swTab(t,el){
+  document.getElementById('tp-script').style.display=t==='script'?'':'none';
+  document.getElementById('tp-log').style.display=t==='log'?'':'none';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  else document.querySelectorAll('.tab')[t==='script'?0:1].classList.add('on');
+}
+
+function showDash(){
+  const tot=drivers.length,done=drivers.filter(d=>d.statut.includes('soumis')).length;
+  const rapp=drivers.filter(d=>d.statut.includes('Rappeler')).length;
+  const inj=drivers.filter(d=>d.statut.includes('Injoignable')||d.statut.includes('Refus')).length;
+  const pct=tot>0?Math.round(done/tot*100):0;
+  document.getElementById('dk').innerHTML=[
+    ['Total',tot,'var(--blue)'],['Complétés',done,'var(--green)'],
+    ['À rappeler',rapp,'var(--amber)'],['Injoignables',inj,'var(--red)'],
+    ['Progression',pct+'%','var(--green)'],
+  ].map(([l,v,c])=>`<div class="dash-kpi"><div class="dk-l">${l}</div><div class="dk-n" style="color:${c}">${v}</div></div>`).join('');
+  const sts={};drivers.forEach(d=>{sts[d.statut]=(sts[d.statut]||0)+1;});
+  document.getElementById('dst').innerHTML='<tr><th>Statut</th><th>Nb</th><th>%</th></tr>'+Object.entries(sts).map(([s,n])=>`<tr><td>${s}</td><td>${n}</td><td>${Math.round(n/tot*100)}%</td></tr>`).join('');
+  const sups={};
+  drivers.forEach(d=>{
+    if(!sups[d.sup])sups[d.sup]={done:0,rapp:0,todo:0};
+    if(d.statut.includes('soumis'))sups[d.sup].done++;
+    else if(d.statut.includes('Rappeler'))sups[d.sup].rapp++;
+    else sups[d.sup].todo++;
+  });
+  document.getElementById('dsup').innerHTML='<tr><th>Superviseur</th><th style="color:var(--green)">Complétés</th><th style="color:var(--amber)">Rappels</th><th>À appeler</th></tr>'+Object.entries(sups).map(([s,v])=>`<tr><td>${s}</td><td style="color:var(--green)">${v.done}</td><td style="color:var(--amber)">${v.rapp}</td><td>${v.todo}</td></tr>`).join('');
+  const rds=drivers.filter(d=>d.statut.includes('Rappeler'));
+  document.getElementById('drapp').innerHTML='<tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th></tr>'+(rds.length?rds.map(d=>`<tr><td>${d.prenom} ${d.nom}</td><td>${d.sup}</td><td>${d.nb}</td><td>${d.r1||'—'}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
+  document.getElementById('dash').classList.add('vis');
+}
+function hideDash(){document.getElementById('dash').classList.remove('vis');}
+
+function toast(msg,type='i'){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},3000);
+}
+
+loadDrivers();
+</script>
+</body>
+</html>
