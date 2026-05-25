@@ -119,44 +119,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .pright{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 .fbar{padding:9px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;background:var(--s1);flex-shrink:0;}
 .fdot{width:6px;height:6px;border-radius:50%;background:var(--green);}
-.farea{flex:1;overflow-y:auto;padding:20px 24px;}
+.farea{flex:1;overflow-y:auto;padding:0 24px 24px;}
 .farea::-webkit-scrollbar{width:4px;}
 .farea::-webkit-scrollbar-thumb{background:var(--b2);}
 /* Questionnaire */
 .q-driver-badge{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r2);padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
 .q-driver-id{font-family:'DM Mono',monospace;font-size:12px;color:var(--blue);font-weight:500;}
-.q-progress{margin-bottom:20px;}
-.q-prog-bar{height:3px;background:var(--s3);border-radius:2px;overflow:hidden;margin-top:6px;}
+.q-progress{
+  position:sticky;top:0;z-index:10;
+  background:var(--s1);
+  margin:0 -24px 20px;
+  padding:10px 24px 12px;
+  border-bottom:1px solid var(--b1);
+}
+.q-prog-bar{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;margin-top:8px;}
 .q-prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;}
-.q-block{margin-bottom:24px;}
+.q-prog-top{display:flex;justify-content:space-between;align-items:center;}
+.q-prog-title{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;}
+.q-block{margin-bottom:32px;}
 .q-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--b1);}
-.q-item{margin-bottom:16px;}
-.q-label{font-size:13px;font-weight:500;color:var(--tx);margin-bottom:8px;line-height:1.4;}
+.q-item{margin-bottom:22px;}
+.q-label{font-size:14px;font-weight:500;color:var(--tx);margin-bottom:10px;line-height:1.5;}
 .q-label span.req{color:var(--red);margin-left:2px;}
 /* Scale */
 .scale{display:flex;gap:4px;}
-.scale-btn{flex:1;padding:7px 4px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--tx3);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-align:center;transition:.1s;font-weight:500;}
+.scale-btn{flex:1;padding:10px 4px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--tx3);font-family:'DM Mono',monospace;font-size:13px;cursor:pointer;text-align:center;transition:.1s;font-weight:600;}
 .scale-btn:hover{background:var(--s3);border-color:var(--b2);color:var(--tx);}
 .scale-btn.sel{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
 .scale-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-top:4px;}
 /* Stars */
 .stars{display:flex;gap:6px;}
-.star-btn{font-size:22px;cursor:pointer;color:var(--tx3);transition:.1s;background:none;border:none;padding:0;}
+.star-btn{font-size:28px;cursor:pointer;color:var(--tx3);transition:.1s;background:none;border:none;padding:2px 4px;}
 .star-btn:hover,.star-btn.sel{color:var(--amber);}
 /* Choices */
 .choices{display:flex;flex-direction:column;gap:5px;}
-.choice{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;transition:.1s;}
+.choice{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;transition:.1s;}
 .choice:hover{background:var(--s3);border-color:var(--b2);}
 .choice.sel{background:var(--blue-bg);border-color:var(--blue-br);}
 .choice input{display:none;}
 .choice-mark{width:14px;height:14px;border:1px solid var(--b3);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:.1s;}
 .choice.radio .choice-mark{border-radius:50%;}
 .choice.sel .choice-mark{background:var(--blue);border-color:var(--blue);color:#fff;}
-.choice-text{font-size:12px;color:var(--tx2);}
+.choice-text{font-size:13px;color:var(--tx2);}
 .choice.sel .choice-text{color:var(--tx);}
 /* Submit */
 .q-submit{margin-top:24px;padding-top:16px;border-top:1px solid var(--b1);}
-.q-submit-btn{width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--r2);font-family:inherit;font-size:13px;font-weight:600;color:#0c0e14;cursor:pointer;transition:.12s;}
+.q-submit-btn{width:100%;padding:14px;background:var(--green);border:none;border-radius:var(--r2);font-family:inherit;font-size:15px;font-weight:700;color:#0c0e14;cursor:pointer;transition:.12s;}
 .q-submit-btn:hover{opacity:.88;}
 .q-submit-btn:disabled{opacity:.4;cursor:not-allowed;}
 /* Success */
@@ -253,10 +261,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
             <span id="ptel" style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--green);letter-spacing:0.03em;">—</span>
           </div>
         </div>
-        <div class="pacts">
+        <div class="pacts" style="gap:8px;">
           <span class="pill p-a" id="ppill">🟣 À appeler</span>
-          <button class="btn" onclick="doCall()">📞 Appeler</button>
-          <button class="btn btn-green" onclick="markDone()">✅ Appel complété</button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn" onclick="doCall()" style="font-size:12px;" title="Enregistre la date et passe à l'onglet Suivi">📞 J'appelle</button>
+            <button class="btn" onclick="quickResult('Pas répondu')" style="font-size:12px;border-color:var(--amber-br);color:var(--amber);" title="Pas répondu">⏭ Pas répondu</button>
+            <button class="btn" onclick="quickResult('Messagerie')" style="font-size:12px;border-color:var(--amber-br);color:var(--amber);" title="Messagerie">📬 Messagerie</button>
+            <button class="btn btn-green" onclick="markDone()" style="font-size:12px;" title="Marquer comme complété après soumission du questionnaire">✅ Appel complété</button>
+          </div>
         </div>
       </div>
 
@@ -371,10 +383,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
               <div style="margin-left:auto;"><span class="q-driver-id" id="qid">—</span></div>
             </div>
 
-            <!-- Progress -->
+            <!-- Progress sticky -->
             <div class="q-progress">
-              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);">
-                <span>Progression</span><span id="qpct">0 / 11</span>
+              <div class="q-prog-top">
+                <span class="q-prog-title">📋 Questionnaire</span>
+                <span id="qpct" style="font-size:12px;font-weight:600;color:var(--blue);">0 / 11 questions</span>
               </div>
               <div class="q-prog-bar"><div class="q-prog-fill" id="qpf" style="width:0%"></div></div>
             </div>
@@ -608,7 +621,7 @@ function updProg(){
     const v=formAnswers[k];
     return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
   }).length;
-  document.getElementById('qpct').textContent=`${done} / 11`;
+  document.getElementById('qpct').textContent=`${done} / 11 questions`;
   document.getElementById('qpf').style.width=`${Math.round(done/11*100)}%`;
   document.getElementById('qsbtn').disabled=done<11;
 }
@@ -763,6 +776,32 @@ function doCall(){
   else if(!cur.d3){cur.d3=today;document.getElementById('ld3').value=today;}
   swTab('log',null);
   toast(`📞 ${cur.prenom} ${cur.nom} — ${cur.tel}`,'i');
+}
+
+function quickResult(result){
+  if(!cur)return;
+  const today=new Date().toISOString().split('T')[0];
+  // Fill next available attempt
+  if(!cur.d1){
+    cur.d1=today; cur.r1=result;
+    document.getElementById('ld1').value=today;
+    document.getElementById('lr1').value=result;
+  } else if(!cur.d2){
+    cur.d2=today; cur.r2=result;
+    document.getElementById('ld2').value=today;
+    document.getElementById('lr2').value=result;
+  } else if(!cur.d3){
+    cur.d3=today; cur.r3=result;
+    document.getElementById('ld3').value=today;
+    document.getElementById('lr3').value=result;
+  }
+  // Auto-set status to Rappeler
+  cur.statut='🟡 Rappeler';
+  cur.nb=[cur.r1,cur.r2,cur.r3].filter(Boolean).length;
+  document.getElementById('lg-st').value='🟡 Rappeler';
+  updPill();
+  renderList();updKPIs();
+  toast(`${result} enregistré — statut passé à 🟡 Rappeler`,'w');
 }
 
 function updPill(){
