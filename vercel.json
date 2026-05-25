@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/drivers", "dest": "/api/drivers.js" },
+    { "src": "/api/submit", "dest": "/api/submit.js" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ]
+}
