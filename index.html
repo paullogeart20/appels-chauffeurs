@@ -610,20 +610,42 @@ function updProg(){
 // ── Drivers ──
 async function loadDrivers(){
   toast('Synchronisation GSheet...','i');
-  try{
-    const appsUrl = encodeURIComponent('https://script.google.com/macros/s/AKfycbwZePDKjBd1ALG9vhGPgvtfZe2uio7S5uqbyKfSYdJHLMkIqUuBGUQSeP4cMYB-Xfjn/exec');
-    const proxyUrl = 'https://api.allorigins.win/raw?url=' + appsUrl;
-    const r = await fetch(proxyUrl);
+  const APPS_URL = 'https://script.google.com/macros/s/AKfycbwZePDKjBd1ALG9vhGPgvtfZe2uio7S5uqbyKfSYdJHLMkIqUuBGUQSeP4cMYB-Xfjn/exec';
+  
+  // Essai 1 : corsproxy.io
+  async function tryFetch(proxyUrl) {
+    const r = await fetch(proxyUrl, {mode:'cors'});
     if(!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    if(d.status==='OK' && d.drivers && d.drivers.length > 0){
-      drivers = d.drivers;
-      toast(drivers.length + ' chauffeurs chargés','s');
-    } else throw new Error('No drivers');
-  } catch(e){
-    loadFallback();
-    toast('Mode démonstration — ' + e.message, 'w');
+    const text = await r.text();
+    const d = JSON.parse(text);
+    if(d.status==='OK' && d.drivers && d.drivers.length > 0) return d.drivers;
+    throw new Error('No drivers in response');
   }
+
+  const proxies = [
+    'https://corsproxy.io/?' + encodeURIComponent(APPS_URL),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(APPS_URL),
+    'https://cors-anywhere.herokuapp.com/' + APPS_URL,
+  ];
+
+  let loaded = false;
+  for (const url of proxies) {
+    try {
+      const d = await tryFetch(url);
+      drivers = d;
+      toast(drivers.length + ' chauffeurs chargés ✓', 's');
+      loaded = true;
+      break;
+    } catch(e) {
+      console.warn('Proxy failed:', url, e.message);
+    }
+  }
+  
+  if (!loaded) {
+    loadFallback();
+    toast('Mode démonstration — tous les proxies ont échoué', 'w');
+  }
+  
   renderList();updKPIs();
 }
 
