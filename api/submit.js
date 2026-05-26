@@ -19,11 +19,7 @@ export default async function handler(req, res) {
 
     if (response.status === 301 || response.status === 302) {
       const location = response.headers.get('location');
-      response = await fetch(location, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
+      response = await fetch(location, { method: 'GET' });
     }
 
     const text = await response.text();
