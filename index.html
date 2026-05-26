@@ -1208,7 +1208,7 @@ function refreshPerfTab(){
   // Today's calls - based on d1 date == today
   const todayStr = new Date().toISOString().split('T')[0];
   const todayFmt = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-  const todayCount = drivers.filter(d => d.d1===todayStr||d.d2===todayStr||d.d3===todayStr).length;
+  const todayCount = drivers.filter(d => (d.d1||'').slice(0,10)===todayStr||(d.d2||'').slice(0,10)===todayStr||(d.d3||'').slice(0,10)===todayStr).length;
   document.getElementById('today-count').textContent = todayCount;
   document.getElementById('today-date').textContent = todayFmt;
   const objPct = Math.min(100, Math.round(todayCount/dailyObjective*100));
@@ -1265,7 +1265,7 @@ function renderDailyChart(){
   const counts = {};
   drivers.forEach(d => {
     [d.d1, d.d2, d.d3].forEach(dt => {
-      const k = (dt||'').trim();
+      const k = (dt||'').trim().slice(0,10);
       if(k) counts[k] = (counts[k]||0) + 1;
     });
   });
