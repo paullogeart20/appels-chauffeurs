@@ -584,14 +584,17 @@ function setF(f, el) {
 }
 
 function startQueue() {
-  // Prioritize: rappels first, then à appeler
-  const rappels = drivers.filter(d => d.statut.includes('Rappeler'));
-  const todo = drivers.filter(d => d.statut.includes('À appeler'));
+  if(!drivers.length) { toast('Chargement en cours, patientez...', 'i'); return; }
+  const rappels = drivers.filter(d => d.statut && d.statut.includes('Rappeler'));
+  const todo = drivers.filter(d => {
+    if(!d.statut) return false;
+    return !d.statut.includes('soumis') && !d.statut.includes('Rappeler') && !d.statut.includes('Injoignable') && !d.statut.includes('Refus');
+  });
   const queue = [...rappels, ...todo];
   if(queue.length > 0) {
     selectDriver(queue[0]);
   } else {
-    toast('Tous les chauffeurs ont été appelés !', 's');
+    toast('Tous les chauffeurs ont été traités !', 's');
   }
 }
 
