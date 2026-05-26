@@ -248,19 +248,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .cond-field{display:none;margin-top:8px;}
 .cond-field.vis{display:block;}
 
-/* ── GRID 3×3 (Q5) ── */
-.grid3x3{width:100%;border-collapse:collapse;font-size:12px;}
-.grid3x3 th{padding:6px 8px;font-size:10px;font-weight:500;color:var(--tx3);text-align:center;border-bottom:1px solid var(--b1);}
-.grid3x3 th:first-child{text-align:left;min-width:180px;}
-.grid3x3 td{padding:5px 8px;border-bottom:1px solid var(--b1);}
-.grid3x3 tr:last-child td{border-bottom:none;}
-.row-label{font-size:12px;color:var(--tx2);}
-.grid-cell{display:flex;justify-content:center;}
-.grid-radio{width:32px;height:32px;border-radius:50%;border:2px solid var(--b2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0;transition:.15s;padding:0;font-family:inherit;color:transparent;}
-.grid-radio:hover{border-color:var(--b3);background:var(--s3);}
-.grid-radio.sel-ts{background:var(--green-bg);border-color:var(--green);color:var(--green);font-size:14px;}
-.grid-radio.sel-s{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-size:14px;}
-.grid-radio.sel-ns{background:var(--red-bg);border-color:var(--red);color:var(--red);font-size:14px;}
+/* ── Q5 SATISFACTION VÉHICULE ── */
+.sat-group{margin-bottom:10px;}
+.sat-group-label{font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:6px;}
+.sat-opts{display:flex;gap:6px;}
+.sat-btn{flex:1;padding:9px 4px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--tx2);cursor:pointer;transition:.1s;text-align:center;}
+.sat-btn:hover{background:var(--s3);border-color:var(--b2);}
+.sat-btn.sel-ts{background:var(--green-bg);border-color:var(--green-br);color:var(--green);font-weight:600;}
+.sat-btn.sel-s{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);font-weight:600;}
+.sat-btn.sel-ns{background:var(--red-bg);border-color:var(--red-br);color:var(--red);font-weight:600;}
 
 /* ── RISK CARDS ── */
 .risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
@@ -809,7 +805,7 @@ function showQForm() {
   formAnswers = {};
   document.querySelectorAll('.choice.sel').forEach(c => c.classList.remove('sel'));
   document.querySelectorAll('.scale-btn.sel').forEach(b => b.classList.remove('sel'));
-  document.querySelectorAll('.grid-radio').forEach(b => b.className = 'grid-radio');
+  document.querySelectorAll('.sat-btn').forEach(b => b.className = 'sat-btn');
   document.querySelectorAll('.cond-field.vis').forEach(f => f.classList.remove('vis'));
   document.querySelectorAll('.free-text').forEach(t => t.value = '');
   updProg();
@@ -855,32 +851,30 @@ function buildQForm() {
 
   <div class="q-item" id="qi5">
     <div class="q-label">Satisfaction véhicule — Comment tu te sens avec ton véhicule au quotidien ?<span class="req">*</span></div>
-    <table class="grid3x3">
-      <tr>
-        <th></th>
-        <th style="color:var(--green)">✓ Très satisfait</th>
-        <th style="color:var(--blue)">~ Satisfait</th>
-        <th style="color:var(--red)">✗ Pas satisfait</th>
-      </tr>
-      <tr>
-        <td class="row-label">Fiabilité et entretien</td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','ts',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','s',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','ns',this)">✓</button></td>
-      </tr>
-      <tr>
-        <td class="row-label">Confort pour travailler toute la journée</td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','ts',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','s',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','ns',this)">✓</button></td>
-      </tr>
-      <tr>
-        <td class="row-label">Consommation d'essence</td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','ts',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','s',this)">✓</button></td>
-        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','ns',this)">✓</button></td>
-      </tr>
-    </table>
+    <div class="sat-group">
+      <div class="sat-group-label">Fiabilité et entretien</div>
+      <div class="sat-opts" id="sat-fiabilite">
+        <button class="sat-btn" onclick="radioQ5(this,'fiabilite',event)">Très satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'fiabilite',event)">Satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'fiabilite',event)">Pas satisfait</button>
+      </div>
+    </div>
+    <div class="sat-group">
+      <div class="sat-group-label">Confort pour travailler toute la journée</div>
+      <div class="sat-opts" id="sat-confort">
+        <button class="sat-btn" onclick="radioQ5(this,'confort',event)">Très satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'confort',event)">Satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'confort',event)">Pas satisfait</button>
+      </div>
+    </div>
+    <div class="sat-group">
+      <div class="sat-group-label">Consommation d'essence</div>
+      <div class="sat-opts" id="sat-consommation">
+        <button class="sat-btn" onclick="radioQ5(this,'consommation',event)">Très satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'consommation',event)">Satisfait</button>
+        <button class="sat-btn" onclick="radioQ5(this,'consommation',event)">Pas satisfait</button>
+      </div>
+    </div>
     <div class="cond-field" id="cond-q5">
       <div class="q-label" style="font-size:12px;color:var(--tx2);">Tu peux préciser ce qui se passe ?</div>
       <textarea class="free-text" id="ft5" placeholder="Précise le problème..." oninput="freeText('q5_libre','ft5')"></textarea>
@@ -1017,13 +1011,15 @@ function freeText(key, inputId){
   updProg();
 }
 
-function gridSel(dim, val, btn){
-  const row = btn.closest('tr');
-  row.querySelectorAll('.grid-radio').forEach(b => b.className = 'grid-radio');
-  btn.className = 'grid-radio sel-' + val;
+function radioQ5(btn, dim, event){
+  if(event) event.preventDefault();
+  const opts = btn.closest('.sat-opts');
+  opts.querySelectorAll('.sat-btn').forEach(b => b.className = 'sat-btn');
+  const opt = btn.textContent.trim();
+  btn.className = opt === 'Très satisfait' ? 'sat-btn sel-ts' : opt === 'Satisfait' ? 'sat-btn sel-s' : 'sat-btn sel-ns';
   if(!formAnswers.q5) formAnswers.q5 = {};
-  formAnswers.q5[dim] = val;
-  const hasNs = Object.values(formAnswers.q5).some(v => v === 'ns');
+  formAnswers.q5[dim] = opt;
+  const hasNs = Object.values(formAnswers.q5).some(v => v === 'Pas satisfait');
   document.getElementById('cond-q5').classList.toggle('vis', hasNs);
   updProg();
 }
@@ -1377,7 +1373,7 @@ function refreshResultsTab(){
 
   // ── Vehicle satisfaction Q4+Q5 ───────────────────────────────
   const vModels=['Suzuki Spresso','Suzuki Dzire','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'];
-  const vScore = v => v==='ts'?2:v==='s'?1:v==='ns'?0:null;
+  const vScore = v => v==='Très satisfait'?2:v==='Satisfait'?1:v==='Pas satisfait'?0:null;
   const vAvg = (arr) => { const f=arr.filter(v=>v!==null); return f.length ? (f.reduce((a,b)=>a+b,0)/f.length/2*100).toFixed(0)+'%' : '—'; };
   const vData = {};
   vModels.forEach(m=>{ vData[m]={fiab:[],conf:[],conso:[],count:0}; });
