@@ -256,11 +256,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .grid3x3 tr:last-child td{border-bottom:none;}
 .row-label{font-size:12px;color:var(--tx2);}
 .grid-cell{display:flex;justify-content:center;}
-.grid-radio{width:30px;height:28px;border-radius:6px;border:1.5px solid var(--b2);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.1s;padding:0;font-family:inherit;}
-.grid-radio:hover{background:var(--s3);}
-.grid-radio.sel-ts{background:var(--green-bg);border-color:var(--green-br);color:var(--green);}
-.grid-radio.sel-s{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
-.grid-radio.sel-ns{background:var(--red-bg);border-color:var(--red-br);color:var(--red);}
+.grid-radio{width:32px;height:32px;border-radius:50%;border:2px solid var(--b2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0;transition:.15s;padding:0;font-family:inherit;color:transparent;}
+.grid-radio:hover{border-color:var(--b3);background:var(--s3);}
+.grid-radio.sel-ts{background:var(--green-bg);border-color:var(--green);color:var(--green);font-size:14px;}
+.grid-radio.sel-s{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-size:14px;}
+.grid-radio.sel-ns{background:var(--red-bg);border-color:var(--red);color:var(--red);font-size:14px;}
 
 /* ── RISK CARDS ── */
 .risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
@@ -856,7 +856,12 @@ function buildQForm() {
   <div class="q-item" id="qi5">
     <div class="q-label">Satisfaction véhicule — Comment tu te sens avec ton véhicule au quotidien ?<span class="req">*</span></div>
     <table class="grid3x3">
-      <tr><th></th><th>Très satisfait</th><th>Satisfait</th><th>Pas satisfait</th></tr>
+      <tr>
+        <th></th>
+        <th style="color:var(--green)">✓ Très satisfait</th>
+        <th style="color:var(--blue)">~ Satisfait</th>
+        <th style="color:var(--red)">✗ Pas satisfait</th>
+      </tr>
       <tr>
         <td class="row-label">Fiabilité et entretien</td>
         <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','ts',this)">✓</button></td>
