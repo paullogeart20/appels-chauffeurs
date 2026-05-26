@@ -10,9 +10,6 @@ export default async function handler(req, res) {
   try {
     const body = JSON.stringify(req.body);
 
-    // Google Apps Script returns a 302 redirect on POST requests.
-    // Node fetch follows it by converting POST→GET (browser standard).
-    // We intercept the redirect and re-send as POST to the final URL.
     let response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       redirect: 'manual',
@@ -29,7 +26,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    console.log('[submit] Apps Script status:', response.status, '| body:', text.slice(0, 500));
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (_) {
+      return res.status(500).json({
+        status: 'ERROR',
+        message: 'Apps Script returned non-JSON (HTTP ' + response.status + ')',
+        raw: text.slice(0, 300),
+      });
+    }
+
     return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ status: 'ERROR', message: err.message });
