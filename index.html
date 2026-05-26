@@ -1108,8 +1108,10 @@ async function submitForm(){
   try{
     const r=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const d=await r.json();
+    console.log('[submitForm] réponse Apps Script:', JSON.stringify(d));
     if(d.status==='OK') ok=true;
-  }catch(e){console.error(e);}
+    else console.warn('[submitForm] Apps Script error:', d.message||d);
+  }catch(e){console.error('[submitForm] fetch error:', e);}
 
   if(!cur.r1){cur.d1=today;cur.r1='Répondu';}
   else if(!cur.r2){cur.d2=today;cur.r2='Répondu';}
