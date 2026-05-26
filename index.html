@@ -989,7 +989,7 @@ function refreshPerfTab(){
     ['À rappeler', rapp, 'var(--amber)'],
     ['Injoignables', inj, 'var(--red)'],
     ['Restants', reste, 'var(--tx2)'],
-    ['Appels aujourd'hui', todayCount, todayCount>=dailyObjective?'var(--green)':'var(--blue)'],
+    ["Appels aujourd'hui", todayCount, todayCount>=dailyObjective?'var(--green)':'var(--blue)'],
     ['Objectif jour', dailyObjective, 'var(--purple)'],
   ].map(([l,v,c])=>`<div class="dash-kpi"><div class="dk-l">${l}</div><div class="dk-n" style="color:${c}">${v}</div></div>`).join('');
 
