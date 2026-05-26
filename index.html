@@ -221,6 +221,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .bar-row-bar{flex:1;height:16px;background:var(--s2);border-radius:4px;overflow:hidden;}
 .bar-row-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s;}
 .bar-row-val{width:36px;text-align:right;font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;flex-shrink:0;}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"]{
+  --bg:#f4f6fb;--s1:#ffffff;--s2:#eef0f6;--s3:#e2e5ee;
+  --b1:rgba(0,0,0,0.07);--b2:rgba(0,0,0,0.13);--b3:rgba(0,0,0,0.22);
+  --tx:#1a1d2e;--tx2:#4a5268;--tx3:#8892aa;
+}
+[data-theme="light"] .p-x{background:rgba(0,0,0,.06);color:var(--tx3);}
+[data-theme="light"] .q-submit-btn{color:#fff;}
+[data-theme="light"] .dash-tbl tr:hover td{background:var(--s2);}
+
+/* ── VERTICAL BAR CHART (appels/jour) ── */
+.vchart-wrap{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:16px 16px 8px;}
+.vchart{display:flex;align-items:flex-end;gap:4px;height:96px;}
+.vbar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;min-width:0;}
+.vbar-cnt{font-size:10px;font-weight:600;color:var(--tx2);font-family:'DM Mono',monospace;height:14px;line-height:14px;}
+.vbar-area{flex:1;width:100%;display:flex;align-items:flex-end;}
+.vbar{width:100%;border-radius:3px 3px 0 0;transition:height .4s ease,background .3s;min-height:0;}
+.vbar-lbl{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;padding-top:3px;}
 </style>
 </head>
 <body>
@@ -238,6 +257,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <button class="btn" onclick="loadDrivers()">↺ Sync</button>
     <button class="btn" onclick="showDash()">📊 Dashboard</button>
     <a href="https://docs.google.com/spreadsheets/d/1dXHKRl6v94x5WG9Tk_jtKtLNjkfeXLKy7f1Awm2WuVE/edit" target="_blank" class="btn">GSheet ↗</a>
+    <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Mode clair / sombre" style="padding:5px 10px;font-size:15px;">🌙</button>
   </div>
 </div>
 
@@ -425,6 +445,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title">📈 Vue globale</div>
     <div class="dash-kpi-grid" id="dk-global"></div>
 
+    <!-- Appels par jour -->
+    <div class="dash-section-title">📅 Appels par jour — 14 derniers jours</div>
+    <div class="vchart-wrap">
+      <div class="vchart" id="daily-chart"></div>
+    </div>
+
     <!-- Par superviseur -->
     <div class="dash-section-title">👤 Par superviseur</div>
     <table class="dash-tbl" id="dsup">
@@ -463,12 +489,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
       </div>
     </div>
 
-    <!-- Distribution satisfaction -->
-    <div class="dash-section-title">Répartition satisfaction (Q1)</div>
+    <!-- Q1 Distribution satisfaction -->
+    <div class="dash-section-title">📊 Satisfaction globale — distribution des notes (Q1)</div>
     <div class="bar-chart" id="q1-chart"></div>
 
-    <!-- Top points positifs -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+    <!-- Q2 + Q3 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
       <div>
         <div class="dash-section-title">✅ Ce qui fonctionne bien (Q2)</div>
         <div id="q2-bars"></div>
@@ -479,21 +505,49 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
       </div>
     </div>
 
-    <!-- Préoccupations -->
-    <div class="dash-section-title" style="margin-top:16px;">😟 Préoccupations (Q8)</div>
+    <!-- Q4 + Q5 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div>
+        <div class="dash-section-title">⚖️ Charge de travail / planning (Q4)</div>
+        <div id="q4-bars"></div>
+      </div>
+      <div>
+        <div class="dash-section-title">⭐ Note superviseur — distribution (Q5)</div>
+        <div id="q5-bars"></div>
+      </div>
+    </div>
+
+    <!-- Q6 + Q7 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div>
+        <div class="dash-section-title">📞 Disponibilité superviseur (Q6)</div>
+        <div id="q6-bars"></div>
+      </div>
+      <div>
+        <div class="dash-section-title">🔒 Points de friction superviseur (Q7)</div>
+        <div id="q7-bars"></div>
+      </div>
+    </div>
+
+    <!-- Q8 Préoccupations -->
+    <div class="dash-section-title" style="margin-top:16px;">😟 Préoccupations actuelles (Q8)</div>
     <div id="q8-bars"></div>
 
-    <!-- Projection -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+    <!-- Q9 + Q10 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
       <div>
         <div class="dash-section-title">🔮 Projection 12 mois (Q9)</div>
         <div id="q9-bars"></div>
       </div>
       <div>
-        <div class="dash-section-title">💬 Priorité d'action (Q11)</div>
-        <div id="q11-bars"></div>
+        <div class="dash-section-title">👍 Recommandation à un ami (Q10)</div>
+        <div id="q10-bars"></div>
       </div>
     </div>
+
+    <!-- Q11 Priorité -->
+    <div class="dash-section-title" style="margin-top:16px;">💬 Priorité d'action (Q11)</div>
+    <div id="q11-bars"></div>
 
     <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx3);text-align:center;">
       Les données s'alimentent en temps réel depuis l'onglet "Réponses" de ton Google Sheet via Apps Script.
@@ -506,6 +560,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 
 <script>
 const APPS_URL = 'https://script.google.com/macros/s/AKfycbwZePDKjBd1ALG9vhGPgvtfZe2uio7S5uqbyKfSYdJHLMkIqUuBGUQSeP4cMYB-Xfjn/exec';
+
+// ── Theme init (runs immediately, before render) ─────────────
+if(localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-theme','light');
 
 let drivers = [], cur = null, curIdx = 0, activeFilter = 'all', formAnswers = {};
 
@@ -1015,6 +1072,43 @@ function refreshPerfTab(){
   const rds = drivers.filter(d=>d.statut.includes('Rappeler'));
   document.getElementById('drapp').innerHTML = '<tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th><th>Dernier appel</th></tr>'
     + (rds.length ? rds.map(d=>`<tr><td style="font-weight:500">${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td style="color:var(--amber)">${d.r1||'—'}</td><td style="color:var(--tx3)">${d.d1||'—'}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
+
+  renderDailyChart();
+}
+
+function renderDailyChart(){
+  // Count calls per date from d1/d2/d3 fields
+  const counts = {};
+  drivers.forEach(d => {
+    [d.d1, d.d2, d.d3].forEach(dt => {
+      const k = (dt||'').trim();
+      if(k) counts[k] = (counts[k]||0) + 1;
+    });
+  });
+
+  // Build last 14 days
+  const days = [];
+  const today = new Date();
+  for(let i = 13; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const lbl = d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}).replace('.','');
+    days.push({key, lbl, count: counts[key]||0});
+  }
+
+  const maxC = Math.max(...days.map(d=>d.count), 1);
+  const el = document.getElementById('daily-chart');
+  if(!el) return;
+  el.innerHTML = days.map(d => {
+    const pct = Math.round(d.count / maxC * 100);
+    const col = d.count >= dailyObjective ? 'var(--green)' : d.count > 0 ? 'var(--blue)' : 'var(--s3)';
+    return `<div class="vbar-col">
+      <span class="vbar-cnt">${d.count||''}</span>
+      <div class="vbar-area"><div class="vbar" style="height:${pct}%;background:${col};" title="${d.count} appel${d.count>1?'s':''}"></div></div>
+      <span class="vbar-lbl">${d.lbl}</span>
+    </div>`;
+  }).join('');
 }
 
 function refreshResultsTab(){
@@ -1023,9 +1117,10 @@ function refreshResultsTab(){
   const n = resp.length;
   document.getElementById('resp-count').textContent = n > 0 ? `(${n} réponses)` : '(aucune réponse encore)';
 
+  const empty = '<div style="color:var(--tx3);font-size:12px;padding:10px 0;">Aucune réponse encore.</div>';
   if(n === 0){
-    ['q1-chart','q2-bars','q3-bars','q8-bars','q9-bars','q11-bars'].forEach(id=>{
-      document.getElementById(id).innerHTML = '<div style="color:var(--tx3);font-size:12px;padding:10px 0;">Aucune réponse encore — les données apparaîtront ici dès les premiers questionnaires soumis.</div>';
+    ['q1-chart','q2-bars','q3-bars','q4-bars','q5-bars','q6-bars','q7-bars','q8-bars','q9-bars','q10-bars','q11-bars'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.innerHTML = empty;
     });
     document.getElementById('r-note').textContent='—';
     document.getElementById('r-promo').textContent='—';
@@ -1078,11 +1173,13 @@ function refreshResultsTab(){
       </div>`).join('');
   }
 
-  document.getElementById('q2-bars').innerHTML = countOpts('q2','var(--green)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
-  document.getElementById('q3-bars').innerHTML = countOpts('q3','var(--red)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
-  document.getElementById('q8-bars').innerHTML = countOpts('q8','var(--amber)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  const no = '<div style="color:var(--tx3);font-size:12px;">—</div>';
 
-  // Q9 & Q11 - single choice
+  document.getElementById('q2-bars').innerHTML = countOpts('q2','var(--green)') || no;
+  document.getElementById('q3-bars').innerHTML = countOpts('q3','var(--red)') || no;
+  document.getElementById('q8-bars').innerHTML = countOpts('q8','var(--amber)') || no;
+
+  // Single-choice helper
   function countSingle(field, color='var(--blue)'){
     const counts={};
     resp.forEach(r=>{if(r[field]){const k=r[field].trim();counts[k]=(counts[k]||0)+1;}});
@@ -1096,8 +1193,49 @@ function refreshResultsTab(){
       </div>`).join('');
   }
 
-  document.getElementById('q9-bars').innerHTML = countSingle('q9','var(--purple)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
-  document.getElementById('q11-bars').innerHTML = countSingle('q11','var(--blue)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  // Q4 charge travail (single)
+  document.getElementById('q4-bars').innerHTML = countSingle('q4','var(--blue)') || no;
+
+  // Q5 distribution étoiles
+  const starDist={1:0,2:0,3:0,4:0,5:0};
+  supNotes.forEach(v=>{const k=Math.round(v);if(starDist[k]!==undefined)starDist[k]++;});
+  const maxStar=Math.max(...Object.values(starDist),1);
+  document.getElementById('q5-bars').innerHTML = Object.entries(starDist).map(([k,v])=>`
+    <div class="bar-row">
+      <span class="bar-row-label">${'★'.repeat(+k)}</span>
+      <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxStar*100)}%;background:var(--amber)"></div></div>
+      <span class="bar-row-val">${v}</span>
+    </div>`).join('');
+
+  // Q6 disponibilité (single)
+  document.getElementById('q6-bars').innerHTML = countSingle('q6','var(--blue)') || no;
+
+  // Q7 friction (single)
+  document.getElementById('q7-bars').innerHTML = countSingle('q7','var(--purple)') || no;
+
+  // Q9 projection (single)
+  document.getElementById('q9-bars').innerHTML = countSingle('q9','var(--purple)') || no;
+
+  // Q10 recommandation (single)
+  document.getElementById('q10-bars').innerHTML = countSingle('q10','var(--green)') || no;
+
+  // Q11 priorité (single)
+  document.getElementById('q11-bars').innerHTML = countSingle('q11','var(--blue)') || no;
+}
+
+// ── Theme ────────────────────────────────────────────────────
+function toggleTheme(){
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  if(isLight){
+    html.removeAttribute('data-theme');
+    document.getElementById('theme-btn').textContent = '🌙';
+    localStorage.setItem('theme','dark');
+  } else {
+    html.setAttribute('data-theme','light');
+    document.getElementById('theme-btn').textContent = '☀️';
+    localStorage.setItem('theme','light');
+  }
 }
 
 function toast(msg,type='i'){
@@ -1107,6 +1245,7 @@ function toast(msg,type='i'){
 }
 
 loadDrivers();
+if(localStorage.getItem('theme')==='light') document.getElementById('theme-btn').textContent='☀️';
 </script>
 </body>
 </html>
