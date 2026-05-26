@@ -246,7 +246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div class="logo"><div class="pulse"></div>Appels Chauffeurs</div>
+  <div class="logo"><div class="pulse"></div>Appels Chauffeurs <span id="demo-badge" style="display:none;font-size:10px;font-weight:700;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-br);border-radius:4px;padding:2px 7px;letter-spacing:.05em;">DÉMO</span></div>
   <div class="topbar-kpis">
     <div class="kpi"><span class="kn" id="kt" style="color:var(--blue)">—</span><span style="color:var(--tx3)">total</span></div>
     <div class="kpi"><span class="kn" id="kd" style="color:var(--green)">—</span><span style="color:var(--tx3)">complétés</span></div>
@@ -754,10 +754,8 @@ function quickResult(result) {
   // Save attempt to GSheet (fire-and-forget)
   saveCRMUpdate(cur);
 
-  // Auto-advance after 1s if not Rappeler plus tard
-  if(result !== 'Rappeler plus tard') {
-    setTimeout(() => navDriver(1), 1200);
-  }
+  // Advance to next driver after 1s for all 3 actions
+  setTimeout(() => navDriver(1), 1000);
 }
 
 async function saveCRMUpdate(d) {
@@ -966,18 +964,21 @@ async function submitForm(){
 // ── Drivers ─────────────────────────────────────────────────
 async function loadDrivers(){
   toast('Synchronisation...','i');
+  document.getElementById('demo-badge').style.display = 'none';
   try{
     const r=await fetch('/api/drivers');
     if(!r.ok) throw new Error('HTTP '+r.status);
     const d=await r.json();
+    if(d.status==='ERROR') throw new Error('Apps Script: '+d.message);
     if(d.status==='OK'&&d.drivers&&d.drivers.length>0){
-      // Filter out junk rows (no name or test entries)
       drivers=d.drivers.filter(d=>d.nom&&d.nom!=='NaN'&&d.nom!=='-'&&d.nom.trim()!=='');
-      toast(drivers.length+' chauffeurs chargés','s');
-    } else throw new Error('No drivers');
+      toast(drivers.length+' chauffeurs chargés ✓','s');
+    } else throw new Error('Réponse inattendue: '+JSON.stringify(d).slice(0,120));
   }catch(e){
+    console.error('[loadDrivers] ERREUR — vérifier la console pour déboguer:', e.message);
     loadFallback();
-    toast('Mode démonstration','w');
+    document.getElementById('demo-badge').style.display = '';
+    toast('⚠️ API hors ligne — Mode démo (voir console)','w');
   }
   buildQForm();
   renderQueue();
