@@ -369,7 +369,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <span class="qpanel-title" id="qpanel-title">Questionnaire</span>
         <div class="q-prog-wrap">
           <div class="q-prog-bar"><div class="q-prog-fill" id="qpf" style="width:0%"></div></div>
-          <span class="q-pct" id="qpct">0/11</span>
+          <span class="q-pct" id="qpct">0/16</span>
         </div>
       </div>
       <div class="qform" id="qform" style="flex:1;"></div>
@@ -961,6 +961,26 @@ function buildQForm() {
   <div class="q-item" id="qi14">
     <div class="q-label">Une chose à changer — Si Fleetch devait changer une seule chose pour que tu te sentes mieux ?<span class="req">*</span></div>
     <textarea class="free-text" id="ft14" placeholder="Ta priorité..." oninput="freeText('q14','ft14')"></textarea>
+  </div>
+
+  <div class="q-section">Bloc 7 — Communication</div>
+
+  <div class="q-item" id="qi15">
+    <div class="q-label">Groupe WhatsApp — Est-ce que tu arrives à lire les messages et infos partagés sur le groupe WhatsApp ?<span class="req">*</span></div>
+    <div class="choices" id="ch15">
+      ${['Oui je lis tout régulièrement','Je lis de temps en temps mais pas tout','Rarement j\'ai pas toujours le temps','Non je suis pas vraiment le groupe'].map(o=>`<div class="choice radio" onclick="radioQ15(this,event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+    <div class="cond-field" id="cond-q15">
+      <div class="q-label" style="font-size:12px;color:var(--tx2);">Qu'est-ce qui t'empêche de suivre ?</div>
+      <textarea class="free-text" id="ft15" placeholder="Explique..." oninput="freeText('q15_libre','ft15')"></textarea>
+    </div>
+  </div>
+
+  <div class="q-item" id="qi16">
+    <div class="q-label">Concours Fleetch — Est-ce que tu comprends et arrives à participer aux concours organisés par Fleetch ?<span class="req">*</span></div>
+    <div class="choices" id="ch16">
+      ${['Oui je participe et je comprends bien comment ça marche','Je comprends mais j\'arrive pas toujours à participer','Je comprends pas vraiment comment ça marche','Je savais pas que Fleetch organisait des concours'].map(o=>`<div class="choice radio" onclick="radio(this,\'ch16\',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
   </div>`;
 
   // Build scale Q1
@@ -1029,18 +1049,24 @@ function radioQ13(el, event){
   document.getElementById('cond-q13').classList.toggle('vis', !v.startsWith('Oui c'));
 }
 
+function radioQ15(el, event){
+  radio(el,'ch15',event);
+  const v = formAnswers.q15||'';
+  document.getElementById('cond-q15').classList.toggle('vis', v.startsWith('Rarement')||v.startsWith('Non'));
+}
+
 function updProg(){
-  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14'];
+  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16'];
   const done=keys.filter(k=>{
     const v=formAnswers[k];
     if(k==='q5') return v&&v.fiabilite&&v.confort&&v.consommation;
     if(k==='q8') return Array.isArray(v)&&v.length>0;
     return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
   }).length;
-  document.getElementById('qpct').textContent=`${done}/14`;
-  document.getElementById('qpf').style.width=`${Math.round(done/14*100)}%`;
+  document.getElementById('qpct').textContent=`${done}/16`;
+  document.getElementById('qpf').style.width=`${Math.round(done/16*100)}%`;
   const btn=document.getElementById('qsbtn');
-  if(btn) btn.disabled=done<14;
+  if(btn) btn.disabled=done<16;
 }
 
 async function submitForm(){
@@ -1073,6 +1099,9 @@ async function submitForm(){
     q13:formAnswers.q13||'',
     q13_libre:formAnswers.q13_libre||'',
     q14:formAnswers.q14||'',
+    q15:formAnswers.q15||'',
+    q15_libre:formAnswers.q15_libre||'',
+    q16:formAnswers.q16||'',
   };
   let ok=false;
   try{
