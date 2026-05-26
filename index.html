@@ -73,7 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .p-x{background:rgba(255,255,255,.05);color:var(--tx3);}
 
 /* ── CENTER (call panel) ── */
-.callpanel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b1);}
+.callpanel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--b1);position:relative;}
 
 /* Driver card */
 .drv-card{padding:20px 24px;border-bottom:1px solid var(--b1);flex-shrink:0;}
@@ -268,11 +268,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 
   <!-- CALL PANEL -->
   <div class="callpanel" id="callpanel">
-    <div class="empty" id="empty-state">
+    <div class="empty" id="empty-state" style="flex:1;">
       <div class="empty-ico">📞</div>
       <div style="font-size:15px;font-weight:500;color:var(--tx2)">Prêt à appeler</div>
-      <div style="font-size:13px;max-width:220px;">Clique sur un chauffeur dans la liste ou sur <strong>Démarrer</strong> pour commencer.</div>
-      <button class="btn btn-primary" onclick="startQueue()" style="margin-top:8px;">▶ Démarrer la file</button>
+      <div style="font-size:13px;max-width:220px;color:var(--tx3);">Clique sur un chauffeur dans la liste, ou démarre la file automatiquement.</div>
+      <button class="btn btn-primary" onclick="startQueue()" style="margin-top:12px;padding:10px 20px;font-size:13px;">▶ Démarrer la file d'appels</button>
     </div>
 
     <div id="driver-view" style="display:none;flex-direction:column;height:100%;">
@@ -584,8 +584,15 @@ function setF(f, el) {
 }
 
 function startQueue() {
-  const q = getQueue().filter(d => !d.statut.includes('soumis'));
-  if(q.length > 0) selectDriver(q[0]);
+  // Prioritize: rappels first, then à appeler
+  const rappels = drivers.filter(d => d.statut.includes('Rappeler'));
+  const todo = drivers.filter(d => d.statut.includes('À appeler'));
+  const queue = [...rappels, ...todo];
+  if(queue.length > 0) {
+    selectDriver(queue[0]);
+  } else {
+    toast('Tous les chauffeurs ont été appelés !', 's');
+  }
 }
 
 function navDriver(dir) {
