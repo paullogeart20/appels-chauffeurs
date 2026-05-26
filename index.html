@@ -751,10 +751,29 @@ function quickResult(result) {
   const labels = {1:'1ère',2:'2ème',3:'3ème'};
   toast(`${result} — ${labels[cur.nb]||''} tentative`, 'w');
 
+  // Save attempt to GSheet (fire-and-forget)
+  saveCRMUpdate(cur);
+
   // Auto-advance after 1s if not Rappeler plus tard
   if(result !== 'Rappeler plus tard') {
     setTimeout(() => navDriver(1), 1200);
   }
+}
+
+async function saveCRMUpdate(d) {
+  try {
+    await fetch('/api/submit', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'update_driver',
+        id: d.id, statut: d.statut, nb: d.nb,
+        d1: d.d1||'', r1: d.r1||'',
+        d2: d.d2||'', r2: d.r2||'',
+        d3: d.d3||'', r3: d.r3||'',
+      }),
+    });
+  } catch(e) { console.warn('CRM sync failed', e); }
 }
 
 // ── Questionnaire ───────────────────────────────────────────
