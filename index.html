@@ -240,6 +240,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .vbar-area{flex:1;width:100%;display:flex;align-items:flex-end;}
 .vbar{width:100%;border-radius:3px 3px 0 0;transition:height .4s ease,background .3s;min-height:0;}
 .vbar-lbl{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;padding-top:3px;}
+
+/* ── FREE TEXT ── */
+.free-text{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-family:inherit;font-size:13px;resize:vertical;min-height:68px;outline:none;line-height:1.5;margin-top:2px;}
+.free-text:focus{border-color:var(--blue);}
+.free-text::placeholder{color:var(--tx3);}
+.cond-field{display:none;margin-top:8px;}
+.cond-field.vis{display:block;}
+
+/* ── GRID 3×3 (Q5) ── */
+.grid3x3{width:100%;border-collapse:collapse;font-size:12px;}
+.grid3x3 th{padding:6px 8px;font-size:10px;font-weight:500;color:var(--tx3);text-align:center;border-bottom:1px solid var(--b1);}
+.grid3x3 th:first-child{text-align:left;min-width:180px;}
+.grid3x3 td{padding:5px 8px;border-bottom:1px solid var(--b1);}
+.grid3x3 tr:last-child td{border-bottom:none;}
+.row-label{font-size:12px;color:var(--tx2);}
+.grid-cell{display:flex;justify-content:center;}
+.grid-radio{width:30px;height:28px;border-radius:6px;border:1.5px solid var(--b2);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.1s;padding:0;font-family:inherit;}
+.grid-radio:hover{background:var(--s3);}
+.grid-radio.sel-ts{background:var(--green-bg);border-color:var(--green-br);color:var(--green);}
+.grid-radio.sel-s{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
+.grid-radio.sel-ns{background:var(--red-bg);border-color:var(--red-br);color:var(--red);}
+
+/* ── RISK CARDS ── */
+.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.risk-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;transition:border-color .2s,background .2s;}
+.risk-high{border-color:var(--red-br);background:var(--red-bg);}
+.risk-med{border-color:var(--amber-br);}
+
+/* ── VEHICLE / SUPERVISOR TABLES ── */
+.vtable{width:100%;border-collapse:collapse;font-size:12px;}
+.vtable th{text-align:left;padding:7px 10px;font-size:10px;font-weight:500;color:var(--tx3);border-bottom:1px solid var(--b1);}
+.vtable td{padding:8px 10px;border-bottom:1px solid var(--b1);color:var(--tx2);}
+.vtable tr:last-child td{border-bottom:none;}
+.vtable tr:hover td{background:var(--s2);}
 </style>
 </head>
 <body>
@@ -459,7 +493,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
   <div id="dash-results" class="dash-content" style="display:none;">
     <div class="dash-section-title">📊 Résultats du questionnaire <span id="resp-count" style="font-weight:400;color:var(--tx3);font-size:12px;"></span></div>
 
-    <!-- Satisfaction globale -->
+    <!-- RISK INDICATORS -->
+    <div class="dash-section-title">🚨 Indicateurs de risque</div>
+    <div class="risk-grid">
+      <div class="risk-card" id="rc-loyer">
+        <div class="dk-l">Loyer difficile à couvrir</div>
+        <div id="r-loyer" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
+        <div style="font-size:11px;color:var(--tx3);">Q3 · loyer difficile</div>
+      </div>
+      <div class="risk-card" id="rc-heures">
+        <div class="dk-l">Travaillent +10h/jour</div>
+        <div id="r-heures" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--amber);">—</div>
+        <div style="font-size:11px;color:var(--tx3);">Q7 · surexploitation</div>
+      </div>
+      <div class="risk-card" id="rc-churn">
+        <div class="dk-l">Risque de départ</div>
+        <div id="r-churn" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
+        <div style="font-size:11px;color:var(--tx3);">Q12 · ne finira pas</div>
+      </div>
+      <div class="risk-card" id="rc-double">
+        <div class="dk-l">Double risque</div>
+        <div id="r-double" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
+        <div style="font-size:11px;color:var(--tx3);">Loyer difficile + veut partir</div>
+      </div>
+    </div>
+
+    <!-- GLOBAL KPIs -->
+    <div class="dash-section-title" style="margin-top:16px;">⭐ Satisfaction globale</div>
     <div class="results-grid">
       <div class="res-card">
         <div class="dk-l">Note moyenne /10</div>
@@ -467,81 +527,56 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <div class="mini-bar"><div class="mini-fill" id="r-note-bar" style="width:0%;background:var(--green)"></div></div>
       </div>
       <div class="res-card">
-        <div class="dk-l">Promoteurs (recommandent)</div>
-        <div id="r-promo" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);margin:10px 0;">—</div>
+        <div class="dk-l">Effort vs Revenus insuffisant (Q6)</div>
+        <div id="r-effort" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber);margin:10px 0;">—</div>
+        <div style="font-size:11px;color:var(--tx3);">répondent "pas suffisant"</div>
       </div>
       <div class="res-card">
-        <div class="dk-l">Risque de départ</div>
-        <div id="r-risk" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--red);margin:10px 0;">—</div>
+        <div class="dk-l">Exclusivité Yango ok (Q9)</div>
+        <div id="r-yango" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);margin:10px 0;">—</div>
+        <div style="font-size:11px;color:var(--tx3);">répondent "Non"</div>
       </div>
       <div class="res-card">
-        <div class="dk-l">Note superviseur moy. /5</div>
-        <div id="r-sup" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber);margin:10px 0;">—</div>
+        <div class="dk-l">Programme conforme (Q13)</div>
+        <div id="r-attentes" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin:10px 0;">—</div>
+        <div style="font-size:11px;color:var(--tx3);">attentes respectées</div>
       </div>
     </div>
 
-    <!-- Q1 Distribution satisfaction -->
-    <div class="dash-section-title">📊 Satisfaction globale — distribution des notes (Q1)</div>
+    <!-- Q1 Distribution -->
+    <div class="dash-section-title" style="margin-top:16px;">📊 Distribution notes globales (Q1)</div>
     <div class="bar-chart" id="q1-chart"></div>
 
-    <!-- Q2 + Q3 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-      <div>
-        <div class="dash-section-title">✅ Ce qui fonctionne bien (Q2)</div>
-        <div id="q2-bars"></div>
-      </div>
-      <div>
-        <div class="dash-section-title">⚠️ Ce qui doit être amélioré (Q3)</div>
-        <div id="q3-bars"></div>
-      </div>
-    </div>
+    <!-- Vehicle satisfaction Q4+Q5 -->
+    <div class="dash-section-title" style="margin-top:16px;">🚗 Satisfaction véhicule par modèle (Q4 + Q5)</div>
+    <div id="vehicle-table"></div>
 
-    <!-- Q4 + Q5 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-      <div>
-        <div class="dash-section-title">⚖️ Charge de travail / planning (Q4)</div>
-        <div id="q4-bars"></div>
-      </div>
-      <div>
-        <div class="dash-section-title">⭐ Note superviseur — distribution (Q5)</div>
-        <div id="q5-bars"></div>
-      </div>
-    </div>
-
-    <!-- Q6 + Q7 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-      <div>
-        <div class="dash-section-title">📞 Disponibilité superviseur (Q6)</div>
-        <div id="q6-bars"></div>
-      </div>
-      <div>
-        <div class="dash-section-title">🔒 Points de friction superviseur (Q7)</div>
-        <div id="q7-bars"></div>
-      </div>
-    </div>
-
-    <!-- Q8 Préoccupations -->
-    <div class="dash-section-title" style="margin-top:16px;">😟 Préoccupations actuelles (Q8)</div>
+    <!-- Q8 Problèmes Yango -->
+    <div class="dash-section-title" style="margin-top:16px;">⚠️ Top problèmes Yango (Q8)</div>
     <div id="q8-bars"></div>
 
-    <!-- Q9 + Q10 -->
+    <!-- Q12 Projection + Q13 Attentes -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
       <div>
-        <div class="dash-section-title">🔮 Projection 12 mois (Q9)</div>
-        <div id="q9-bars"></div>
+        <div class="dash-section-title">🔮 Projection programme (Q12)</div>
+        <div id="q12-bars"></div>
       </div>
       <div>
-        <div class="dash-section-title">👍 Recommandation à un ami (Q10)</div>
-        <div id="q10-bars"></div>
+        <div class="dash-section-title">🤝 Attentes vs réalité (Q13)</div>
+        <div id="q13-bars"></div>
       </div>
     </div>
 
-    <!-- Q11 Priorité -->
-    <div class="dash-section-title" style="margin-top:16px;">💬 Priorité d'action (Q11)</div>
-    <div id="q11-bars"></div>
+    <!-- Supervisors Q10+Q11 -->
+    <div class="dash-section-title" style="margin-top:16px;">👤 Classement superviseurs (Q10 dispo + Q11 perception)</div>
+    <div id="sup-table"></div>
+
+    <!-- Q14 verbatim -->
+    <div class="dash-section-title" style="margin-top:16px;">💬 Ce que Fleetch devrait changer — verbatim (Q14)</div>
+    <div id="q14-list"></div>
 
     <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx3);text-align:center;">
-      Les données s'alimentent en temps réel depuis l'onglet "Réponses" de ton Google Sheet via Apps Script.
+      Données en temps réel depuis l'onglet "Réponses" du Google Sheet via Apps Script.
     </div>
   </div>
 </div>
@@ -772,10 +807,11 @@ function showQForm() {
   document.getElementById('q-success').style.display = 'none';
   document.getElementById('q-footer').style.display = '';
   formAnswers = {};
-  // Reset UI
   document.querySelectorAll('.choice.sel').forEach(c => c.classList.remove('sel'));
   document.querySelectorAll('.scale-btn.sel').forEach(b => b.classList.remove('sel'));
-  document.querySelectorAll('.star-btn.sel').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.grid-radio').forEach(b => b.className = 'grid-radio');
+  document.querySelectorAll('.cond-field.vis').forEach(f => f.classList.remove('vis'));
+  document.querySelectorAll('.free-text').forEach(t => t.value = '');
   updProg();
 }
 
@@ -788,87 +824,146 @@ function showSuccess(msg) {
 
 function buildQForm() {
   document.getElementById('qform').innerHTML = `
-  <div class="q-section">Bloc 1 — Satisfaction générale</div>
+  <div class="q-section">Bloc 1 — Programme & satisfaction globale</div>
 
   <div class="q-item" id="qi1">
-    <div class="q-label">Note globale — Sur 10, comment évaluez-vous votre expérience chez nous ?<span class="req">*</span></div>
+    <div class="q-label">Note globale — Sur 10, tu notes ton expérience avec Fleetch combien ?<span class="req">*</span></div>
     <div class="scale" id="sc1"></div>
     <div class="scale-labels"><span>Très insatisfait</span><span>Très satisfait</span></div>
   </div>
 
   <div class="q-item" id="qi2">
-    <div class="q-label">Ce qui fonctionne bien — Quels aspects vous satisfont le plus ?<span class="req">*</span></div>
-    <div class="choices" id="ch2">
-      ${['L\'autonomie au travail','La rémunération','Le planning et les horaires','Le matériel / véhicule','L\'ambiance d\'équipe','La relation avec mon superviseur','La communication interne','La sécurité au travail'].map(o=>`<div class="choice" onclick="chk(this,'ch2',event)"><div class="choice-mark">✓</div><div class="choice-text">${o}</div></div>`).join('')}
-    </div>
+    <div class="q-label">Ce qui plaît — Qu'est-ce qui te plaît le plus dans le programme Drive to Own ?<span class="req">*</span></div>
+    <textarea class="free-text" id="ft2" placeholder="Exprime-toi librement..." oninput="freeText('q2','ft2')"></textarea>
   </div>
 
   <div class="q-item" id="qi3">
-    <div class="q-label">Ce qui doit être amélioré — Quels aspects sont les plus insatisfaisants ?<span class="req">*</span></div>
+    <div class="q-label">Couverture loyer — Ce que tu gagnes sur Yango te permet-il de couvrir ton loyer Fleetch et tes dépenses ?<span class="req">*</span></div>
     <div class="choices" id="ch3">
-      ${['La rémunération','La charge de travail / planning subi','Le matériel / véhicule en mauvais état','Le manque de communication','Le manque de reconnaissance','Les problèmes de sécurité','Les relations d\'équipe difficiles','Le manque de flexibilité'].map(o=>`<div class="choice" onclick="chk(this,'ch3',event)"><div class="choice-mark">✓</div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Oui confortablement','Oui mais c\'est juste','Non le loyer passe mais il reste peu pour moi','Non c\'est difficile de couvrir le loyer'].map(o=>`<div class="choice radio" onclick="radio(this,'ch3',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
+
+  <div class="q-section">Bloc 2 — Véhicule</div>
 
   <div class="q-item" id="qi4">
-    <div class="q-label">Charge de travail — Comment évaluez-vous votre charge et votre planning ?<span class="req">*</span></div>
+    <div class="q-label">Modèle véhicule — Quel est ton véhicule Fleetch ?<span class="req">*</span></div>
     <div class="choices" id="ch4">
-      ${['Très bien équilibré','Acceptable','Parfois trop lourd','Régulièrement excessif'].map(o=>`<div class="choice radio" onclick="radio(this,'ch4',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Suzuki Spresso','Suzuki Dzire','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'].map(o=>`<div class="choice radio" onclick="radio(this,'ch4',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
 
-  <div class="q-section">Bloc 2 — Relation avec le superviseur</div>
-
   <div class="q-item" id="qi5">
-    <div class="q-label">Note superviseur — Sur 5 étoiles<span class="req">*</span></div>
-    <div class="stars" id="st5"></div>
+    <div class="q-label">Satisfaction véhicule — Comment tu te sens avec ton véhicule au quotidien ?<span class="req">*</span></div>
+    <table class="grid3x3">
+      <tr><th></th><th>Très satisfait</th><th>Satisfait</th><th>Pas satisfait</th></tr>
+      <tr>
+        <td class="row-label">Fiabilité et entretien</td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','ts',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','s',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('fiabilite','ns',this)">✓</button></td>
+      </tr>
+      <tr>
+        <td class="row-label">Confort pour travailler toute la journée</td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','ts',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','s',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('confort','ns',this)">✓</button></td>
+      </tr>
+      <tr>
+        <td class="row-label">Consommation d'essence</td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','ts',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','s',this)">✓</button></td>
+        <td class="grid-cell"><button class="grid-radio" onclick="gridSel('consommation','ns',this)">✓</button></td>
+      </tr>
+    </table>
+    <div class="cond-field" id="cond-q5">
+      <div class="q-label" style="font-size:12px;color:var(--tx2);">Tu peux préciser ce qui se passe ?</div>
+      <textarea class="free-text" id="ft5" placeholder="Précise le problème..." oninput="freeText('q5_libre','ft5')"></textarea>
+    </div>
   </div>
 
+  <div class="q-section">Bloc 3 — Revenus & charges</div>
+
   <div class="q-item" id="qi6">
-    <div class="q-label">Disponibilité — Votre superviseur est-il disponible ?<span class="req">*</span></div>
+    <div class="q-label">Effort vs revenus — Ce que tu gagnes sur Yango est-il à la hauteur de l'effort fourni ?<span class="req">*</span></div>
     <div class="choices" id="ch6">
-      ${['Toujours disponible','Souvent disponible','Parfois disponible','Rarement disponible'].map(o=>`<div class="choice radio" onclick="radio(this,'ch6',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Oui c\'est juste','Ça peut aller','Non c\'est pas suffisant'].map(o=>`<div class="choice radio" onclick="radio(this,'ch6',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
 
   <div class="q-item" id="qi7">
-    <div class="q-label">Points de friction — Comment se passent vos échanges avec votre superviseur ?<span class="req">*</span></div>
+    <div class="q-label">Heures par jour — Combien d'heures tu roules en moyenne pour couvrir loyer et dépenses ?<span class="req">*</span></div>
     <div class="choices" id="ch7">
-      ${['Je peux tout aborder librement','Il y a parfois des blocages','C\'est souvent compliqué','Je n\'ose pas aborder certains sujets'].map(o=>`<div class="choice radio" onclick="radio(this,'ch7',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Moins de 8h','Entre 8h et 10h','Entre 10h et 12h','Plus de 12h'].map(o=>`<div class="choice radio" onclick="radio(this,'ch7',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
 
-  <div class="q-section">Bloc 3 — Préoccupations et projection</div>
+  <div class="q-section">Bloc 4 — Yango & travail</div>
 
   <div class="q-item" id="qi8">
-    <div class="q-label">Préoccupations actuelles — Quels sujets vous préoccupent ?<span class="req">*</span></div>
+    <div class="q-label">Problèmes Yango — Quels sont les 2 problèmes qui t'arrivent le plus souvent ? <span style="color:var(--tx3);font-size:11px;">(max 2)</span><span class="req">*</span></div>
     <div class="choices" id="ch8">
-      ${['Aucun sujet particulier','La rémunération / les primes','La sécurité au travail','Le matériel / véhicule défaillant','Le planning imposé','Les relations d\'équipe','Mon avenir dans l\'entreprise','Un problème non résolu avec ma hiérarchie'].map(o=>`<div class="choice" onclick="chk(this,'ch8',event)"><div class="choice-mark">✓</div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Les annulations de courses par les clients','Les notes injustes qui baissent mon score','Les problèmes techniques avec l\'appli','Les zones où il y a peu de demandes','Les clients qui se comportent mal'].map(o=>`<div class="choice" onclick="chkMax(this,'ch8',2,event)"><div class="choice-mark">✓</div><div class="choice-text">${o}</div></div>`).join('')}
+      <div class="choice" id="ch8-autre" onclick="chkMax(this,'ch8',2,event)"><div class="choice-mark">✓</div><div class="choice-text">Autre</div></div>
+    </div>
+    <div class="cond-field" id="cond-q8">
+      <textarea class="free-text" id="ft8" placeholder="Précise..." oninput="freeText('q8_autre','ft8')"></textarea>
     </div>
   </div>
 
   <div class="q-item" id="qi9">
-    <div class="q-label">Projection — Comment vous voyez-vous dans 12 mois ?<span class="req">*</span></div>
+    <div class="q-label">Exclusivité Yango — Le fait de travailler uniquement sur Yango te pose-t-il un problème ?<span class="req">*</span></div>
     <div class="choices" id="ch9">
-      ${['Je me vois encore là et j\'envisage de rester longtemps','Je ne sais pas encore','Je pense chercher autre chose'].map(o=>`<div class="choice radio" onclick="radio(this,'ch9',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Oui','Un peu','Non'].map(o=>`<div class="choice radio" onclick="radioQ9(this,event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+    <div class="cond-field" id="cond-q9">
+      <div class="q-label" style="font-size:12px;color:var(--tx2);">Qu'est-ce qui te dérangerait le moins ?</div>
+      <textarea class="free-text" id="ft9" placeholder="Exprime-toi..." oninput="freeText('q9_libre','ft9')"></textarea>
     </div>
   </div>
 
+  <div class="q-section">Bloc 5 — Superviseur</div>
+
   <div class="q-item" id="qi10">
-    <div class="q-label">Recommandation — Recommanderiez-vous à un ami de nous rejoindre ?<span class="req">*</span></div>
+    <div class="q-label">Disponibilité superviseur — Ton superviseur est-il disponible et t'aide-t-il à régler tes problèmes ?<span class="req">*</span></div>
     <div class="choices" id="ch10">
-      ${['Oui, sans hésitation','Probablement oui','Probablement non','Non'].map(o=>`<div class="choice radio" onclick="radio(this,'ch10',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Toujours il répond vite et m\'aide vraiment','La plupart du temps oui','Parfois oui parfois non','Rarement j\'arrive pas souvent à le joindre','Non je me débrouille seul'].map(o=>`<div class="choice radio" onclick="radio(this,'ch10',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
 
   <div class="q-item" id="qi11">
-    <div class="q-label">Priorité d'action — Si on devait agir sur UNE seule chose ?<span class="req">*</span></div>
+    <div class="q-label">Perception superviseur — Ton superviseur est-il plus là pour récupérer le loyer que pour t'aider ?<span class="req">*</span></div>
     <div class="choices" id="ch11">
-      ${['Revaloriser la rémunération','Améliorer le matériel / véhicule','Mieux communiquer les décisions','Plus de flexibilité dans le planning','Mieux reconnaître le travail fourni','Améliorer la sécurité','Mieux soutenir via les superviseurs'].map(o=>`<div class="choice radio" onclick="radio(this,'ch11',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Toujours','Souvent','Parfois','Rarement','Jamais'].map(o=>`<div class="choice radio" onclick="radio(this,'ch11',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
+  </div>
+
+  <div class="q-section">Bloc 6 — Programme & avenir</div>
+
+  <div class="q-item" id="qi12">
+    <div class="q-label">Projection programme — Te vois-tu aller jusqu'au bout pour devenir propriétaire de ton véhicule ?<span class="req">*</span></div>
+    <div class="choices" id="ch12">
+      ${['Oui c\'est mon objectif et je compte y arriver','J\'espère mais c\'est pas gagné','Je sais pas encore','Non je pense pas y arriver'].map(o=>`<div class="choice radio" onclick="radio(this,'ch12',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+  </div>
+
+  <div class="q-item" id="qi13">
+    <div class="q-label">Attentes vs réalité — La réalité du programme correspond-elle à ce que le scout t'avait dit ?<span class="req">*</span></div>
+    <div class="choices" id="ch13">
+      ${['Oui c\'est exactement ce qu\'on m\'avait expliqué','À peu près mais il y avait des choses que je savais pas','Non c\'est assez différent de ce qu\'on m\'avait promis'].map(o=>`<div class="choice radio" onclick="radioQ13(this,event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+    <div class="cond-field" id="cond-q13">
+      <div class="q-label" style="font-size:12px;color:var(--tx2);">Qu'est-ce qui était différent ?</div>
+      <textarea class="free-text" id="ft13" placeholder="Explique..." oninput="freeText('q13_libre','ft13')"></textarea>
+    </div>
+  </div>
+
+  <div class="q-item" id="qi14">
+    <div class="q-label">Une chose à changer — Si Fleetch devait changer une seule chose pour que tu te sentes mieux ?<span class="req">*</span></div>
+    <textarea class="free-text" id="ft14" placeholder="Ta priorité..." oninput="freeText('q14','ft14')"></textarea>
   </div>`;
 
-  // Build scale
+  // Build scale Q1
   const sc = document.getElementById('sc1');
   sc.innerHTML = '';
   for(let i=1;i<=10;i++){
@@ -881,27 +976,6 @@ function buildQForm() {
     };
     sc.appendChild(b);
   }
-
-  // Build stars
-  const st=document.getElementById('st5');
-  st.innerHTML='';
-  for(let i=1;i<=5;i++){
-    const b=document.createElement('button');
-    b.className='star-btn';b.textContent='★';b.dataset.v=i;
-    b.onclick=()=>{
-      st.querySelectorAll('.star-btn').forEach((x,j)=>x.classList.toggle('sel',j<i));
-      formAnswers.q5=i;updProg();
-    };
-    st.appendChild(b);
-  }
-}
-
-function chk(el,gid,event){
-  if(event) event.preventDefault();
-  el.classList.toggle('sel');
-  const vals=[...document.querySelectorAll(`#${gid} .choice.sel`)].map(c=>c.querySelector('.choice-text').textContent);
-  formAnswers['q'+gid.replace('ch','')]=vals;
-  updProg();
 }
 
 function radio(el,gid,event){
@@ -912,13 +986,61 @@ function radio(el,gid,event){
   updProg();
 }
 
+function freeText(key, inputId){
+  const val = document.getElementById(inputId).value.trim();
+  if(val) formAnswers[key] = val; else delete formAnswers[key];
+  updProg();
+}
+
+function gridSel(dim, val, btn){
+  const row = btn.closest('tr');
+  row.querySelectorAll('.grid-radio').forEach(b => b.className = 'grid-radio');
+  btn.className = 'grid-radio sel-' + val;
+  if(!formAnswers.q5) formAnswers.q5 = {};
+  formAnswers.q5[dim] = val;
+  const hasNs = Object.values(formAnswers.q5).some(v => v === 'ns');
+  document.getElementById('cond-q5').classList.toggle('vis', hasNs);
+  updProg();
+}
+
+function chkMax(el, gid, max, event){
+  if(event) event.preventDefault();
+  if(!el.classList.contains('sel')){
+    const sel = document.querySelectorAll('#'+gid+' .choice.sel');
+    if(sel.length >= max){ toast('Maximum '+max+' choix', 'w'); return; }
+  }
+  el.classList.toggle('sel');
+  const isAutre = el.id === gid+'-autre';
+  if(isAutre) document.getElementById('cond-q8').classList.toggle('vis', el.classList.contains('sel'));
+  const vals = [...document.querySelectorAll('#'+gid+' .choice.sel')].filter(c=>c.id!==gid+'-autre').map(c=>c.querySelector('.choice-text').textContent);
+  formAnswers.q8 = vals;
+  updProg();
+}
+
+function radioQ9(el, event){
+  radio(el,'ch9',event);
+  const v = formAnswers.q9||'';
+  document.getElementById('cond-q9').classList.toggle('vis', v==='Oui'||v==='Un peu');
+}
+
+function radioQ13(el, event){
+  radio(el,'ch13',event);
+  const v = formAnswers.q13||'';
+  document.getElementById('cond-q13').classList.toggle('vis', !v.startsWith('Oui c'));
+}
+
 function updProg(){
-  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11'];
-  const done=keys.filter(k=>{const v=formAnswers[k];return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);}).length;
-  document.getElementById('qpct').textContent=`${done}/11`;
-  document.getElementById('qpf').style.width=`${Math.round(done/11*100)}%`;
+  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14'];
+  const done=keys.filter(k=>{
+    const v=formAnswers[k];
+    if(k==='q5') return v&&v.fiabilite&&v.confort&&v.consommation;
+    if(k==='q8') return Array.isArray(v)&&v.length>0;
+    return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
+  }).length;
+  document.getElementById('qpct').textContent=`${done}/14`;
+  document.getElementById('qpf').style.width=`${Math.round(done/14*100)}%`;
   const btn=document.getElementById('qsbtn');
-  if(btn) btn.disabled=done<11;
+  if(btn) btn.disabled=done<14;
 }
 
 async function submitForm(){
@@ -926,14 +1048,31 @@ async function submitForm(){
   const btn=document.getElementById('qsbtn');
   btn.textContent='Envoi...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
+  const q5=formAnswers.q5||{};
+  const q8arr=Array.isArray(formAnswers.q8)?formAnswers.q8:[];
+  const q8val=formAnswers.q8_autre ? q8arr.join(';')+';Autre: '+formAnswers.q8_autre : q8arr.join(';');
   const payload={
-    driverId:cur.id, nom:cur.nom, prenom:'', superviseur:cur.sup,
+    driverId:cur.id, nom:cur.nom, superviseur:cur.sup,
     seniorite:cur.sen, date:new Date().toLocaleDateString('fr-FR'),
-    q1:formAnswers.q1||'', q2:Array.isArray(formAnswers.q2)?formAnswers.q2.join(';'):'',
-    q3:Array.isArray(formAnswers.q3)?formAnswers.q3.join(';'):'', q4:formAnswers.q4||'',
-    q5:formAnswers.q5||'', q6:formAnswers.q6||'', q7:formAnswers.q7||'',
-    q8:Array.isArray(formAnswers.q8)?formAnswers.q8.join(';'):'',
-    q9:formAnswers.q9||'', q10:formAnswers.q10||'', q11:formAnswers.q11||'',
+    q1:formAnswers.q1||'',
+    q2:formAnswers.q2||'',
+    q3:formAnswers.q3||'',
+    q4:formAnswers.q4||'',
+    q5_fiabilite:q5.fiabilite||'',
+    q5_confort:q5.confort||'',
+    q5_consommation:q5.consommation||'',
+    q5_libre:formAnswers.q5_libre||'',
+    q6:formAnswers.q6||'',
+    q7:formAnswers.q7||'',
+    q8:q8val,
+    q9:formAnswers.q9||'',
+    q9_libre:formAnswers.q9_libre||'',
+    q10:formAnswers.q10||'',
+    q11:formAnswers.q11||'',
+    q12:formAnswers.q12||'',
+    q13:formAnswers.q13||'',
+    q13_libre:formAnswers.q13_libre||'',
+    q14:formAnswers.q14||'',
   };
   let ok=false;
   try{
@@ -942,7 +1081,6 @@ async function submitForm(){
     if(d.status==='OK') ok=true;
   }catch(e){console.error(e);}
 
-  // Auto-record attempt
   if(!cur.r1){cur.d1=today;cur.r1='Répondu';}
   else if(!cur.r2){cur.d2=today;cur.r2='Répondu';}
   else if(!cur.r3){cur.d3=today;cur.r3='Répondu';}
@@ -1124,46 +1262,78 @@ function renderDailyChart(){
 }
 
 function refreshResultsTab(){
-  // Use drivers data for what we have; responses array for questionnaire data
   const resp = responses.length > 0 ? responses : [];
   const n = resp.length;
   document.getElementById('resp-count').textContent = n > 0 ? `(${n} réponses)` : '(aucune réponse encore)';
 
-  const empty = '<div style="color:var(--tx3);font-size:12px;padding:10px 0;">Aucune réponse encore.</div>';
-  if(n === 0){
-    ['q1-chart','q2-bars','q3-bars','q4-bars','q5-bars','q6-bars','q7-bars','q8-bars','q9-bars','q10-bars','q11-bars'].forEach(id=>{
-      const el = document.getElementById(id); if(el) el.innerHTML = empty;
+  const no = '<div style="color:var(--tx3);font-size:12px;padding:8px 0;">Aucune réponse encore.</div>';
+
+  // ── helpers ──────────────────────────────────────────────────
+  function pct(count){ return n>0 ? Math.round(count/n*100)+'%' : '—'; }
+
+  function barChart(field, color, multi){
+    const counts={};
+    resp.forEach(r=>{
+      if(!r[field]) return;
+      if(multi) r[field].split(';').forEach(v=>{v=v.trim();if(v) counts[v]=(counts[v]||0)+1;});
+      else { const k=String(r[field]).trim(); if(k) counts[k]=(counts[k]||0)+1; }
     });
-    document.getElementById('r-note').textContent='—';
-    document.getElementById('r-promo').textContent='—';
-    document.getElementById('r-risk').textContent='—';
-    document.getElementById('r-sup').textContent='—';
-    return;
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    if(!sorted.length) return no;
+    const maxV=sorted[0][1];
+    return sorted.map(([k,v])=>`
+      <div class="bar-row">
+        <span class="bar-row-label" title="${k}">${k}</span>
+        <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxV*100)}%;background:${color}"></div></div>
+        <span class="bar-row-val">${v}</span>
+      </div>`).join('');
   }
 
-  // Note moyenne Q1
+  // ── Risk indicators ──────────────────────────────────────────
+  const loyerDiff = resp.filter(r=>r.q3&&(r.q3.includes('reste peu')||r.q3.includes('difficile'))).length;
+  const heurSur  = resp.filter(r=>r.q7&&(r.q7.includes('10h et 12h')||r.q7.includes('Plus de 12h'))).length;
+  const churnRisk = resp.filter(r=>r.q12&&(r.q12.includes('Je sais pas')||r.q12.includes('Non je pense'))).length;
+  const double    = resp.filter(r=>r.q3&&r.q12&&(r.q3.includes('difficile'))&&(r.q12.includes('Non je pense'))).length;
+
+  const loyerPct  = n>0 ? Math.round(loyerDiff/n*100) : 0;
+  const heurPct   = n>0 ? Math.round(heurSur/n*100) : 0;
+  const churnPct  = n>0 ? Math.round(churnRisk/n*100) : 0;
+  const doublePct = n>0 ? Math.round(double/n*100) : 0;
+
+  document.getElementById('r-loyer').textContent  = n>0 ? loyerPct+'%'  : '—';
+  document.getElementById('r-heures').textContent = n>0 ? heurPct+'%'   : '—';
+  document.getElementById('r-churn').textContent  = n>0 ? churnPct+'%'  : '—';
+  document.getElementById('r-double').textContent = n>0 ? doublePct+'%' : '—';
+
+  ['rc-loyer','rc-churn','rc-double'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.classList.toggle('risk-high', n>0 && parseInt(document.getElementById(id.replace('rc-','r-')).textContent)>30);
+  });
+  const rcH=document.getElementById('rc-heures');
+  if(rcH) rcH.classList.toggle('risk-med', n>0 && heurPct>30);
+
+  if(n===0) return;
+
+  // ── Global KPIs ──────────────────────────────────────────────
   const notes = resp.map(r=>parseFloat(r.q1)).filter(v=>!isNaN(v));
   const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '—';
   document.getElementById('r-note').textContent = avgNote;
   document.getElementById('r-note-bar').style.width = avgNote!=='—' ? (avgNote*10)+'%' : '0%';
 
-  // Promoteurs Q10
-  const promos = resp.filter(r=>r.q10&&(r.q10.includes('sans hésitation')||r.q10.includes('Probablement oui')));
-  document.getElementById('r-promo').textContent = n>0 ? Math.round(promos.length/n*100)+'%' : '—';
+  const effortInsuf = resp.filter(r=>r.q6&&r.q6.includes('pas suffisant')).length;
+  document.getElementById('r-effort').textContent = pct(effortInsuf);
 
-  // Risque départ Q9
-  const risk = resp.filter(r=>r.q9&&r.q9.includes('chercher autre chose'));
-  document.getElementById('r-risk').textContent = n>0 ? Math.round(risk.length/n*100)+'%' : '—';
+  const yangoOk = resp.filter(r=>r.q9&&r.q9==='Non').length;
+  document.getElementById('r-yango').textContent = pct(yangoOk);
 
-  // Note superviseur Q5
-  const supNotes = resp.map(r=>parseFloat(r.q5)).filter(v=>!isNaN(v));
-  const avgSup = supNotes.length ? (supNotes.reduce((a,b)=>a+b,0)/supNotes.length).toFixed(1) : '—';
-  document.getElementById('r-sup').textContent = avgSup;
+  const attentesOk = resp.filter(r=>r.q13&&r.q13.startsWith('Oui c')).length;
+  document.getElementById('r-attentes').textContent = pct(attentesOk);
 
-  // Q1 distribution
-  const dist = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0};
-  notes.forEach(v=>{ const k=Math.round(v); if(dist[k]!==undefined) dist[k]++; });
-  const maxD = Math.max(...Object.values(dist),1);
+  // ── Q1 distribution ──────────────────────────────────────────
+  const dist={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0};
+  notes.forEach(v=>{const k=Math.round(v);if(dist[k]!==undefined)dist[k]++;});
+  const maxD=Math.max(...Object.values(dist),1);
   document.getElementById('q1-chart').innerHTML = Object.entries(dist).map(([k,v])=>`
     <div class="bar-row">
       <span class="bar-row-label">${k}/10</span>
@@ -1171,68 +1341,74 @@ function refreshResultsTab(){
       <span class="bar-row-val">${v}</span>
     </div>`).join('');
 
-  // Helper: count occurrences in semicolon-separated field
-  function countOpts(field, color='var(--blue)'){
-    const counts={};
-    resp.forEach(r=>{ if(r[field]) r[field].split(';').forEach(v=>{const k=v.trim();if(k){counts[k]=(counts[k]||0)+1;}}); });
-    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-    const maxV=sorted[0]?sorted[0][1]:1;
-    return sorted.map(([k,v])=>`
-      <div class="bar-row">
-        <span class="bar-row-label" title="${k}">${k}</span>
-        <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxV*100)}%;background:${color}"></div></div>
-        <span class="bar-row-val">${v}</span>
-      </div>`).join('');
-  }
+  // ── Vehicle satisfaction Q4+Q5 ───────────────────────────────
+  const vModels=['Suzuki Spresso','Suzuki Dzire','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'];
+  const vScore = v => v==='ts'?2:v==='s'?1:v==='ns'?0:null;
+  const vAvg = (arr) => { const f=arr.filter(v=>v!==null); return f.length ? (f.reduce((a,b)=>a+b,0)/f.length/2*100).toFixed(0)+'%' : '—'; };
+  const vData = {};
+  vModels.forEach(m=>{ vData[m]={fiab:[],conf:[],conso:[],count:0}; });
+  resp.forEach(r=>{
+    const m=r.q4;
+    if(!m||!vData[m]) return;
+    vData[m].count++;
+    const fs=vScore(r.q5_fiabilite), cs=vScore(r.q5_confort), co=vScore(r.q5_consommation);
+    if(fs!==null) vData[m].fiab.push(fs);
+    if(cs!==null) vData[m].conf.push(cs);
+    if(co!==null) vData[m].conso.push(co);
+  });
+  const activeModels = vModels.filter(m=>vData[m].count>0);
+  document.getElementById('vehicle-table').innerHTML = activeModels.length ? `
+    <table class="vtable">
+      <tr><th>Modèle</th><th>Réponses</th><th style="color:var(--green)">Fiabilité</th><th style="color:var(--blue)">Confort</th><th style="color:var(--amber)">Consommation</th></tr>
+      ${activeModels.map(m=>`<tr>
+        <td style="font-weight:500">${m}</td>
+        <td>${vData[m].count}</td>
+        <td>${vAvg(vData[m].fiab)}</td>
+        <td>${vAvg(vData[m].conf)}</td>
+        <td>${vAvg(vData[m].conso)}</td>
+      </tr>`).join('')}
+    </table>` : no;
 
-  const no = '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  // ── Q8 problèmes Yango ───────────────────────────────────────
+  document.getElementById('q8-bars').innerHTML = barChart('q8','var(--amber)',true) || no;
 
-  document.getElementById('q2-bars').innerHTML = countOpts('q2','var(--green)') || no;
-  document.getElementById('q3-bars').innerHTML = countOpts('q3','var(--red)') || no;
-  document.getElementById('q8-bars').innerHTML = countOpts('q8','var(--amber)') || no;
+  // ── Q12 projection + Q13 attentes ───────────────────────────
+  document.getElementById('q12-bars').innerHTML = barChart('q12','var(--purple)') || no;
+  document.getElementById('q13-bars').innerHTML = barChart('q13','var(--blue)') || no;
 
-  // Single-choice helper
-  function countSingle(field, color='var(--blue)'){
-    const counts={};
-    resp.forEach(r=>{if(r[field]){const k=r[field].trim();counts[k]=(counts[k]||0)+1;}});
-    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-    const maxV=sorted[0]?sorted[0][1]:1;
-    return sorted.map(([k,v])=>`
-      <div class="bar-row">
-        <span class="bar-row-label" title="${k}">${k}</span>
-        <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxV*100)}%;background:${color}"></div></div>
-        <span class="bar-row-val">${v}</span>
-      </div>`).join('');
-  }
+  // ── Supervisors Q10+Q11 ──────────────────────────────────────
+  const q10score = v => v&&v.startsWith('Toujours il')?5:v&&v.startsWith('La plupart')?4:v&&v.startsWith('Parfois')?3:v&&v.startsWith('Rarement')?2:v&&v.startsWith('Non')?1:null;
+  const q11score = v => v==='Jamais'?5:v==='Rarement'?4:v==='Parfois'?3:v==='Souvent'?2:v==='Toujours'?1:null;
+  const supMap={};
+  resp.forEach(r=>{
+    const s=r.superviseur||'—';
+    if(!supMap[s]) supMap[s]={q10:[],q11:[]};
+    const s10=q10score(r.q10), s11=q11score(r.q11);
+    if(s10!==null) supMap[s].q10.push(s10);
+    if(s11!==null) supMap[s].q11.push(s11);
+  });
+  const supRows=Object.entries(supMap).map(([s,d])=>{
+    const a10=d.q10.length?(d.q10.reduce((a,b)=>a+b,0)/d.q10.length).toFixed(1):'—';
+    const a11=d.q11.length?(d.q11.reduce((a,b)=>a+b,0)/d.q11.length).toFixed(1):'—';
+    const score=((parseFloat(a10)||0)+(parseFloat(a11)||0))/2;
+    return {s,a10,a11,score,n:d.q10.length};
+  }).sort((a,b)=>b.score-a.score);
+  document.getElementById('sup-table').innerHTML = supRows.length ? `
+    <table class="vtable">
+      <tr><th>Superviseur</th><th>Réponses</th><th style="color:var(--green)">Q10 Dispo /5</th><th style="color:var(--amber)">Q11 Perception /5</th><th>Score moyen</th></tr>
+      ${supRows.map(r=>`<tr>
+        <td style="font-weight:500">${r.s}</td>
+        <td>${r.n}</td>
+        <td style="color:${r.a10>=4?'var(--green)':r.a10>=3?'var(--amber)':'var(--red)'}">${r.a10}</td>
+        <td style="color:${r.a11>=4?'var(--green)':r.a11>=3?'var(--amber)':'var(--red)'}">${r.a11}</td>
+        <td style="font-weight:600">${r.score.toFixed(1)}</td>
+      </tr>`).join('')}
+    </table>` : no;
 
-  // Q4 charge travail (single)
-  document.getElementById('q4-bars').innerHTML = countSingle('q4','var(--blue)') || no;
-
-  // Q5 distribution étoiles
-  const starDist={1:0,2:0,3:0,4:0,5:0};
-  supNotes.forEach(v=>{const k=Math.round(v);if(starDist[k]!==undefined)starDist[k]++;});
-  const maxStar=Math.max(...Object.values(starDist),1);
-  document.getElementById('q5-bars').innerHTML = Object.entries(starDist).map(([k,v])=>`
-    <div class="bar-row">
-      <span class="bar-row-label">${'★'.repeat(+k)}</span>
-      <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxStar*100)}%;background:var(--amber)"></div></div>
-      <span class="bar-row-val">${v}</span>
-    </div>`).join('');
-
-  // Q6 disponibilité (single)
-  document.getElementById('q6-bars').innerHTML = countSingle('q6','var(--blue)') || no;
-
-  // Q7 friction (single)
-  document.getElementById('q7-bars').innerHTML = countSingle('q7','var(--purple)') || no;
-
-  // Q9 projection (single)
-  document.getElementById('q9-bars').innerHTML = countSingle('q9','var(--purple)') || no;
-
-  // Q10 recommandation (single)
-  document.getElementById('q10-bars').innerHTML = countSingle('q10','var(--green)') || no;
-
-  // Q11 priorité (single)
-  document.getElementById('q11-bars').innerHTML = countSingle('q11','var(--blue)') || no;
+  // ── Q14 verbatim ─────────────────────────────────────────────
+  const verbatim = resp.filter(r=>r.q14&&String(r.q14).trim()).map(r=>String(r.q14).trim());
+  document.getElementById('q14-list').innerHTML = verbatim.length ? verbatim.map(v=>`
+    <div style="padding:8px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:6px;font-size:13px;color:var(--tx2);border-left:3px solid var(--blue-br);">${v}</div>`).join('') : no;
 }
 
 // ── Theme ────────────────────────────────────────────────────
