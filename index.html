@@ -183,19 +183,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .toast.w{background:var(--amber-bg);border-color:var(--amber-br);color:var(--amber);}
 
 /* Dashboard */
-.dash{display:none;position:fixed;inset:0;background:var(--bg);z-index:40;overflow-y:auto;padding:24px;}
-.dash.vis{display:block;}
-.dash-close{position:absolute;top:16px;right:16px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:5px 12px;color:var(--tx2);cursor:pointer;font-family:inherit;font-size:12px;}
-.dash-t{font-size:18px;font-weight:600;margin-bottom:16px;}
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.dash{display:none;position:fixed;inset:0;background:var(--bg);z-index:40;flex-direction:column;}
+.dash.vis{display:flex;}
+.dash-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b1);background:var(--s1);flex-shrink:0;}
+.dash-tabs{display:flex;gap:4px;}
+.dash-tab{padding:7px 14px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--b1);background:transparent;color:var(--tx3);transition:.12s;}
+.dash-tab.on{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
+.dash-tab:hover:not(.on){background:var(--s2);}
+.dash-close{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:6px 14px;color:var(--tx2);cursor:pointer;font-family:inherit;font-size:12px;}
+.dash-close:hover{background:var(--s1);}
+.dash-content{flex:1;overflow-y:auto;padding:20px 24px;}
+.dash-content::-webkit-scrollbar{width:4px;}
+.dash-content::-webkit-scrollbar-thumb{background:var(--b2);}
+.dash-section-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px;display:flex;align-items:center;gap:6px;}
+.dash-section-title:first-child{margin-top:0;}
+.dash-obj-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.dash-obj-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;}
+.dk-l{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;}
+.obj-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--b2);background:var(--s2);color:var(--tx);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.obj-btn:hover{background:var(--s3);}
+.mini-bar{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.mini-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s;}
+.dash-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:4px;}
 .dash-kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:14px;}
-.dk-l{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
-.dk-n{font-size:26px;font-weight:600;font-family:'DM Mono',monospace;}
-.dash-st{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:16px;}
+.dk-n{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;margin-top:8px;}
 .dash-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 .dash-tbl th{text-align:left;padding:7px 10px;font-size:10px;font-weight:500;color:var(--tx3);border-bottom:1px solid var(--b1);}
 .dash-tbl td{padding:8px 10px;border-bottom:1px solid var(--b1);color:var(--tx2);}
 .dash-tbl tr:last-child td{border-bottom:none;}
+.dash-tbl tr:hover td{background:var(--s2);}
+/* Results tab */
+.results-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.res-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;}
+.bar-chart{display:flex;flex-direction:column;gap:6px;}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.bar-row-label{width:160px;flex-shrink:0;color:var(--tx2);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-row-bar{flex:1;height:16px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.bar-row-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s;}
+.bar-row-val{width:36px;text-align:right;font-size:11px;color:var(--tx3);font-family:'DM Mono',monospace;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -355,16 +380,127 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
   </div>
 </div>
 
-<!-- DASHBOARD -->
+<!-- DASHBOARD OVERLAY - replaces old dash div -->
 <div class="dash" id="dash">
-  <button class="dash-close" onclick="hideDash()">✕ Fermer</button>
-  <div class="dash-t">Dashboard</div>
-  <div class="dash-grid" id="dk"></div>
-  <div class="dash-st">Par superviseur</div>
-  <table class="dash-tbl" id="dsup"></table>
-  <div class="dash-st">Rappels en attente</div>
-  <table class="dash-tbl" id="drapp"></table>
+  <div class="dash-bar">
+    <div class="dash-tabs">
+      <button class="dash-tab on" onclick="switchDash('perf',this)">📞 Performance</button>
+      <button class="dash-tab" onclick="switchDash('results',this)">📊 Résultats questionnaire</button>
+    </div>
+    <button class="dash-close" onclick="hideDash()">✕</button>
+  </div>
+
+  <!-- TAB 1: PERFORMANCE -->
+  <div id="dash-perf" class="dash-content">
+    <!-- Objectif journalier -->
+    <div class="dash-section-title">🎯 Objectif journalier</div>
+    <div class="dash-obj-row">
+      <div class="dash-obj-card">
+        <div class="dk-l">Objectif appels / jour</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+          <button class="obj-btn" onclick="changeObj(-5)">−</button>
+          <span id="obj-val" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue)">30</span>
+          <button class="obj-btn" onclick="changeObj(5)">+</button>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px;">appels par jour cible</div>
+      </div>
+      <div class="dash-obj-card">
+        <div class="dk-l">Aujourd'hui</div>
+        <div id="today-count" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin-top:8px;">0</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px;" id="today-date">—</div>
+      </div>
+      <div class="dash-obj-card">
+        <div class="dk-l">Progression objectif</div>
+        <div id="obj-pct" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber);margin-top:8px;">0%</div>
+        <div class="mini-bar" style="margin-top:8px;"><div class="mini-fill" id="obj-fill" style="width:0%"></div></div>
+      </div>
+      <div class="dash-obj-card">
+        <div class="dk-l">Jours restants estimés</div>
+        <div id="days-left" style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--purple);margin-top:8px;">—</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px;">pour tout appeler</div>
+      </div>
+    </div>
+
+    <!-- Global KPIs -->
+    <div class="dash-section-title">📈 Vue globale</div>
+    <div class="dash-kpi-grid" id="dk-global"></div>
+
+    <!-- Par superviseur -->
+    <div class="dash-section-title">👤 Par superviseur</div>
+    <table class="dash-tbl" id="dsup">
+      <tr><th>Superviseur</th><th>Total</th><th style="color:var(--green)">Complétés</th><th style="color:var(--amber)">Rappels</th><th>À appeler</th><th>Taux</th></tr>
+    </table>
+
+    <!-- Rappels urgents -->
+    <div class="dash-section-title">🔔 Rappels en attente</div>
+    <table class="dash-tbl" id="drapp">
+      <tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th></tr>
+    </table>
+  </div>
+
+  <!-- TAB 2: RÉSULTATS -->
+  <div id="dash-results" class="dash-content" style="display:none;">
+    <div class="dash-section-title">📊 Résultats du questionnaire <span id="resp-count" style="font-weight:400;color:var(--tx3);font-size:12px;"></span></div>
+
+    <!-- Satisfaction globale -->
+    <div class="results-grid">
+      <div class="res-card">
+        <div class="dk-l">Note moyenne /10</div>
+        <div id="r-note" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin:10px 0;">—</div>
+        <div class="mini-bar"><div class="mini-fill" id="r-note-bar" style="width:0%;background:var(--green)"></div></div>
+      </div>
+      <div class="res-card">
+        <div class="dk-l">Promoteurs (recommandent)</div>
+        <div id="r-promo" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);margin:10px 0;">—</div>
+      </div>
+      <div class="res-card">
+        <div class="dk-l">Risque de départ</div>
+        <div id="r-risk" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--red);margin:10px 0;">—</div>
+      </div>
+      <div class="res-card">
+        <div class="dk-l">Note superviseur moy. /5</div>
+        <div id="r-sup" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber);margin:10px 0;">—</div>
+      </div>
+    </div>
+
+    <!-- Distribution satisfaction -->
+    <div class="dash-section-title">Répartition satisfaction (Q1)</div>
+    <div class="bar-chart" id="q1-chart"></div>
+
+    <!-- Top points positifs -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+      <div>
+        <div class="dash-section-title">✅ Ce qui fonctionne bien (Q2)</div>
+        <div id="q2-bars"></div>
+      </div>
+      <div>
+        <div class="dash-section-title">⚠️ Ce qui doit être amélioré (Q3)</div>
+        <div id="q3-bars"></div>
+      </div>
+    </div>
+
+    <!-- Préoccupations -->
+    <div class="dash-section-title" style="margin-top:16px;">😟 Préoccupations (Q8)</div>
+    <div id="q8-bars"></div>
+
+    <!-- Projection -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+      <div>
+        <div class="dash-section-title">🔮 Projection 12 mois (Q9)</div>
+        <div id="q9-bars"></div>
+      </div>
+      <div>
+        <div class="dash-section-title">💬 Priorité d'action (Q11)</div>
+        <div id="q11-bars"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx3);text-align:center;">
+      Les données s'alimentent en temps réel depuis l'onglet "Réponses" de ton Google Sheet via Apps Script.
+    </div>
+  </div>
 </div>
+
 
 <div class="toasts" id="toasts"></div>
 
@@ -772,24 +908,187 @@ function loadFallback(){
 }
 
 // ── Dashboard ────────────────────────────────────────────────
-function showDash(){
-  const tot=drivers.length,done=drivers.filter(d=>d.statut.includes('soumis')).length;
-  const rapp=drivers.filter(d=>d.statut.includes('Rappeler')).length;
-  const inj=drivers.filter(d=>d.statut.includes('Injoignable')).length;
-  const pct=tot>0?Math.round(done/tot*100):0;
-  document.getElementById('dk').innerHTML=[
-    ['Total',tot,'var(--blue)'],['Complétés',done,'var(--green)'],
-    ['À rappeler',rapp,'var(--amber)'],['Injoignables',inj,'var(--red)'],
-    ['Progression',pct+'%','var(--green)'],
-  ].map(([l,v,c])=>`<div class="dash-kpi"><div class="dk-l">${l}</div><div class="dk-n" style="color:${c}">${v}</div></div>`).join('');
-  const sups={};
-  drivers.forEach(d=>{if(!sups[d.sup])sups[d.sup]={done:0,rapp:0,todo:0};if(d.statut.includes('soumis'))sups[d.sup].done++;else if(d.statut.includes('Rappeler'))sups[d.sup].rapp++;else sups[d.sup].todo++;});
-  document.getElementById('dsup').innerHTML='<tr><th>Superviseur</th><th style="color:var(--green)">Complétés</th><th style="color:var(--amber)">Rappels</th><th>À appeler</th></tr>'+Object.entries(sups).sort((a,b)=>b[1].done-a[1].done).map(([s,v])=>`<tr><td>${s||'—'}</td><td style="color:var(--green)">${v.done}</td><td style="color:var(--amber)">${v.rapp}</td><td>${v.todo}</td></tr>`).join('');
-  const rds=drivers.filter(d=>d.statut.includes('Rappeler'));
-  document.getElementById('drapp').innerHTML='<tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th></tr>'+(rds.length?rds.map(d=>`<tr><td>${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td>${d.r1||'—'}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel 🎉</td></tr>');
-  document.getElementById('dash').classList.add('vis');
+let dailyObjective = parseInt(localStorage.getItem('dailyObj')||'30');
+let responses = []; // loaded from Apps Script
+
+function changeObj(delta){
+  dailyObjective = Math.max(5, dailyObjective + delta);
+  localStorage.setItem('dailyObj', dailyObjective);
+  document.getElementById('obj-val').textContent = dailyObjective;
+  refreshPerfTab();
 }
-function hideDash(){document.getElementById('dash').classList.remove('vis');}
+
+async function loadResponses(){
+  try{
+    const r = await fetch('/api/drivers?sheet=responses');
+    if(!r.ok) return;
+    const d = await r.json();
+    if(d.responses) responses = d.responses;
+  }catch(e){ console.warn('Responses not loaded', e); }
+}
+
+function switchDash(tab, el){
+  document.querySelectorAll('.dash-tab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('dash-perf').style.display = tab==='perf' ? '' : 'none';
+  document.getElementById('dash-results').style.display = tab==='results' ? '' : 'none';
+  if(tab==='results') refreshResultsTab();
+}
+
+function showDash(){
+  document.getElementById('obj-val').textContent = dailyObjective;
+  refreshPerfTab();
+  document.getElementById('dash').classList.add('vis');
+  loadResponses().then(() => {
+    // refresh results if on that tab
+    if(document.getElementById('dash-results').style.display !== 'none') refreshResultsTab();
+  });
+}
+function hideDash(){ document.getElementById('dash').classList.remove('vis'); }
+
+function refreshPerfTab(){
+  const tot = drivers.length;
+  const done = drivers.filter(d=>d.statut.includes('soumis')).length;
+  const rapp = drivers.filter(d=>d.statut.includes('Rappeler')).length;
+  const inj = drivers.filter(d=>d.statut.includes('Injoignable')).length;
+  const reste = drivers.filter(d=>d.statut.includes('À appeler')).length;
+  const pct = tot>0 ? Math.round(done/tot*100) : 0;
+
+  // Today's calls - based on d1 date == today
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayFmt = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const todayCount = drivers.filter(d => d.d1===todayStr||d.d2===todayStr||d.d3===todayStr).length;
+  document.getElementById('today-count').textContent = todayCount;
+  document.getElementById('today-date').textContent = todayFmt;
+  const objPct = Math.min(100, Math.round(todayCount/dailyObjective*100));
+  document.getElementById('obj-pct').textContent = objPct+'%';
+  document.getElementById('obj-fill').style.width = objPct+'%';
+  document.getElementById('obj-fill').style.background = objPct>=100 ? 'var(--green)' : objPct>=60 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('obj-pct').style.color = objPct>=100 ? 'var(--green)' : objPct>=60 ? 'var(--amber)' : 'var(--red)';
+
+  // Days left
+  const avgPerDay = dailyObjective;
+  const daysLeft = reste > 0 ? Math.ceil(reste/avgPerDay) : 0;
+  document.getElementById('days-left').textContent = daysLeft > 0 ? daysLeft+'j' : '✓';
+
+  // Global KPIs
+  document.getElementById('dk-global').innerHTML = [
+    ['Total chauffeurs', tot, 'var(--blue)'],
+    ['Questionnaires soumis', done, 'var(--green)'],
+    ['Taux complétion', pct+'%', 'var(--green)'],
+    ['À rappeler', rapp, 'var(--amber)'],
+    ['Injoignables', inj, 'var(--red)'],
+    ['Restants', reste, 'var(--tx2)'],
+    ['Appels aujourd'hui', todayCount, todayCount>=dailyObjective?'var(--green)':'var(--blue)'],
+    ['Objectif jour', dailyObjective, 'var(--purple)'],
+  ].map(([l,v,c])=>`<div class="dash-kpi"><div class="dk-l">${l}</div><div class="dk-n" style="color:${c}">${v}</div></div>`).join('');
+
+  // Par superviseur
+  const sups={};
+  drivers.forEach(d=>{
+    const s=d.sup||'—';
+    if(!sups[s]) sups[s]={tot:0,done:0,rapp:0,todo:0,inj:0};
+    sups[s].tot++;
+    if(d.statut.includes('soumis')) sups[s].done++;
+    else if(d.statut.includes('Rappeler')) sups[s].rapp++;
+    else if(d.statut.includes('Injoignable')) sups[s].inj++;
+    else sups[s].todo++;
+  });
+  document.getElementById('dsup').innerHTML = '<tr><th>Superviseur</th><th>Total</th><th style="color:var(--green)">Complétés</th><th style="color:var(--amber)">Rappels</th><th>À appeler</th><th>Taux</th></tr>'
+    + Object.entries(sups).sort((a,b)=>b[1].done-a[1].done).map(([s,v])=>{
+      const taux = v.tot>0 ? Math.round(v.done/v.tot*100) : 0;
+      const bar = `<div style="width:${taux}%;height:3px;background:var(--green);border-radius:2px;"></div>`;
+      return `<tr><td style="font-weight:500">${s}</td><td>${v.tot}</td><td style="color:var(--green)">${v.done}</td><td style="color:var(--amber)">${v.rapp}</td><td>${v.todo}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:3px;background:var(--s3);border-radius:2px;">${bar}</div><span style="font-size:10px;color:var(--tx3);width:28px">${taux}%</span></div></td></tr>`;
+    }).join('');
+
+  // Rappels
+  const rds = drivers.filter(d=>d.statut.includes('Rappeler'));
+  document.getElementById('drapp').innerHTML = '<tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th><th>Dernier appel</th></tr>'
+    + (rds.length ? rds.map(d=>`<tr><td style="font-weight:500">${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td style="color:var(--amber)">${d.r1||'—'}</td><td style="color:var(--tx3)">${d.d1||'—'}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
+}
+
+function refreshResultsTab(){
+  // Use drivers data for what we have; responses array for questionnaire data
+  const resp = responses.length > 0 ? responses : [];
+  const n = resp.length;
+  document.getElementById('resp-count').textContent = n > 0 ? `(${n} réponses)` : '(aucune réponse encore)';
+
+  if(n === 0){
+    ['q1-chart','q2-bars','q3-bars','q8-bars','q9-bars','q11-bars'].forEach(id=>{
+      document.getElementById(id).innerHTML = '<div style="color:var(--tx3);font-size:12px;padding:10px 0;">Aucune réponse encore — les données apparaîtront ici dès les premiers questionnaires soumis.</div>';
+    });
+    document.getElementById('r-note').textContent='—';
+    document.getElementById('r-promo').textContent='—';
+    document.getElementById('r-risk').textContent='—';
+    document.getElementById('r-sup').textContent='—';
+    return;
+  }
+
+  // Note moyenne Q1
+  const notes = resp.map(r=>parseFloat(r.q1)).filter(v=>!isNaN(v));
+  const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '—';
+  document.getElementById('r-note').textContent = avgNote;
+  document.getElementById('r-note-bar').style.width = avgNote!=='—' ? (avgNote*10)+'%' : '0%';
+
+  // Promoteurs Q10
+  const promos = resp.filter(r=>r.q10&&(r.q10.includes('sans hésitation')||r.q10.includes('Probablement oui')));
+  document.getElementById('r-promo').textContent = n>0 ? Math.round(promos.length/n*100)+'%' : '—';
+
+  // Risque départ Q9
+  const risk = resp.filter(r=>r.q9&&r.q9.includes('chercher autre chose'));
+  document.getElementById('r-risk').textContent = n>0 ? Math.round(risk.length/n*100)+'%' : '—';
+
+  // Note superviseur Q5
+  const supNotes = resp.map(r=>parseFloat(r.q5)).filter(v=>!isNaN(v));
+  const avgSup = supNotes.length ? (supNotes.reduce((a,b)=>a+b,0)/supNotes.length).toFixed(1) : '—';
+  document.getElementById('r-sup').textContent = avgSup;
+
+  // Q1 distribution
+  const dist = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0};
+  notes.forEach(v=>{ const k=Math.round(v); if(dist[k]!==undefined) dist[k]++; });
+  const maxD = Math.max(...Object.values(dist),1);
+  document.getElementById('q1-chart').innerHTML = Object.entries(dist).map(([k,v])=>`
+    <div class="bar-row">
+      <span class="bar-row-label">${k}/10</span>
+      <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxD*100)}%;background:${k>=8?'var(--green)':k>=5?'var(--amber)':'var(--red)'}"></div></div>
+      <span class="bar-row-val">${v}</span>
+    </div>`).join('');
+
+  // Helper: count occurrences in semicolon-separated field
+  function countOpts(field, color='var(--blue)'){
+    const counts={};
+    resp.forEach(r=>{ if(r[field]) r[field].split(';').forEach(v=>{const k=v.trim();if(k){counts[k]=(counts[k]||0)+1;}}); });
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const maxV=sorted[0]?sorted[0][1]:1;
+    return sorted.map(([k,v])=>`
+      <div class="bar-row">
+        <span class="bar-row-label" title="${k}">${k}</span>
+        <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxV*100)}%;background:${color}"></div></div>
+        <span class="bar-row-val">${v}</span>
+      </div>`).join('');
+  }
+
+  document.getElementById('q2-bars').innerHTML = countOpts('q2','var(--green)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  document.getElementById('q3-bars').innerHTML = countOpts('q3','var(--red)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  document.getElementById('q8-bars').innerHTML = countOpts('q8','var(--amber)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+
+  // Q9 & Q11 - single choice
+  function countSingle(field, color='var(--blue)'){
+    const counts={};
+    resp.forEach(r=>{if(r[field]){const k=r[field].trim();counts[k]=(counts[k]||0)+1;}});
+    const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const maxV=sorted[0]?sorted[0][1]:1;
+    return sorted.map(([k,v])=>`
+      <div class="bar-row">
+        <span class="bar-row-label" title="${k}">${k}</span>
+        <div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round(v/maxV*100)}%;background:${color}"></div></div>
+        <span class="bar-row-val">${v}</span>
+      </div>`).join('');
+  }
+
+  document.getElementById('q9-bars').innerHTML = countSingle('q9','var(--purple)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+  document.getElementById('q11-bars').innerHTML = countSingle('q11','var(--blue)') || '<div style="color:var(--tx3);font-size:12px;">—</div>';
+}
 
 function toast(msg,type='i'){
   const c=document.getElementById('toasts');
