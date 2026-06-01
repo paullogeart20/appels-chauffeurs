@@ -270,6 +270,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .vtable td{padding:8px 10px;border-bottom:1px solid var(--b1);color:var(--tx2);}
 .vtable tr:last-child td{border-bottom:none;}
 .vtable tr:hover td{background:var(--s2);}
+/* ── AGENT MODAL ── */
+.agent-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.agent-overlay.hidden{display:none;}
+.agent-box{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r2);padding:32px;width:340px;display:flex;flex-direction:column;gap:14px;}
+.agent-box h2{font-size:17px;font-weight:600;}
+.agent-box p{font-size:12px;color:var(--tx2);line-height:1.6;}
+.agent-input{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:9px 13px;color:var(--tx);font-family:inherit;font-size:14px;outline:none;width:100%;}
+.agent-input:focus{border-color:var(--blue);}
+.agent-badge{padding:4px 10px;background:var(--purple-bg);border:1px solid var(--purple-br);color:var(--purple);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.agent-badge:hover{background:var(--purple-bg);opacity:.8;}
 </style>
 </head>
 <body>
@@ -284,6 +294,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="kpi"><span class="kn" id="kreste" style="color:var(--tx2)">—</span><span style="color:var(--tx3)">restants</span></div>
   </div>
   <div class="topbar-right">
+    <button class="agent-badge" id="agent-badge" onclick="showAgentModal()">👤 —</button>
     <button class="btn" onclick="loadDrivers()">↺ Sync</button>
     <button class="btn" onclick="showDash()">📊 Dashboard</button>
     <a href="https://docs.google.com/spreadsheets/d/132cw_7ipnTTD-cj2lada1FNLKUfPJu0a-e8pTXVhRf0/edit" target="_blank" class="btn">GSheet ↗</a>
@@ -472,6 +483,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
       <div class="vchart" id="daily-chart"></div>
     </div>
 
+    <!-- Par agent -->
+    <div class="dash-section-title">👥 Par agent</div>
+    <div class="dash-kpi-grid" id="dagent"></div>
+
     <!-- Par superviseur -->
     <div class="dash-section-title">👤 Par superviseur</div>
     <table class="dash-tbl" id="dsup">
@@ -578,6 +593,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 </div>
 
 
+<div class="agent-overlay hidden" id="agent-overlay">
+  <div class="agent-box">
+    <h2>👤 Quel agent êtes-vous ?</h2>
+    <p>Votre prénom sera associé à chaque appel pour le suivi individuel dans le dashboard.</p>
+    <input class="agent-input" id="agent-input" placeholder="Ex : Marie, Paul…" maxlength="30"
+      onkeydown="if(event.key==='Enter')confirmAgent()">
+    <button class="btn btn-primary" onclick="confirmAgent()">Confirmer →</button>
+  </div>
+</div>
+
 <div class="toasts" id="toasts"></div>
 
 <script>
@@ -587,6 +612,22 @@ const APPS_URL = 'https://script.google.com/macros/s/AKfycbwZePDKjBd1ALG9vhGPgvt
 if(localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-theme','light');
 
 let drivers = [], cur = null, curIdx = 0, activeFilter = 'all', formAnswers = {};
+let agentName = localStorage.getItem('agentName') || '';
+
+function showAgentModal() {
+  document.getElementById('agent-overlay').classList.remove('hidden');
+  const inp = document.getElementById('agent-input');
+  inp.value = agentName;
+  setTimeout(() => inp.focus(), 50);
+}
+function confirmAgent() {
+  const val = document.getElementById('agent-input').value.trim();
+  if (!val) { toast('Entrez votre prénom', 'w'); return; }
+  agentName = val;
+  localStorage.setItem('agentName', val);
+  document.getElementById('agent-badge').textContent = '👤 ' + val;
+  document.getElementById('agent-overlay').classList.add('hidden');
+}
 
 // ── Queue navigation ─────────────────────────────────────────
 function getQueue() {
@@ -742,9 +783,12 @@ function renderAttempts() {
   ];
   const fmt = a => {
     if(!a.r) return `<span class="att-badge att-empty">T${a.n} —</span>`;
-    const cls = a.r === 'Répondu' ? 'att-ok' : 'att-nok';
-    const d = a.d ? ' · ' + a.d.slice(5).replace('-','/') : '';
-    return `<span class="att-badge ${cls}">T${a.n} ${a.r}${d}</span>`;
+    const label = a.r.split(' — ')[0]; // strip agent name for display
+    const agent = a.r.split(' — ')[1];
+    const cls = label === 'Répondu' ? 'att-ok' : 'att-nok';
+    const d = a.d ? ' · ' + (a.d||'').slice(0,10).slice(5).replace('-','/') : '';
+    const ag = agent ? ` <span style="opacity:.5;font-size:10px">(${agent})</span>` : '';
+    return `<span class="att-badge ${cls}">T${a.n} ${label}${d}</span>${ag}`;
   };
   document.getElementById('attempt-rows').innerHTML =
     `<span class="att-label">Tentatives</span>` + rows.map(fmt).join('');
@@ -754,9 +798,10 @@ function renderAttempts() {
 function quickResult(result) {
   if(!cur) return;
   const today = new Date().toISOString().split('T')[0];
-  if(!cur.r1){ cur.d1=today; cur.r1=result; }
-  else if(!cur.r2){ cur.d2=today; cur.r2=result; }
-  else if(!cur.r3){ cur.d3=today; cur.r3=result; }
+  const tagged = result + (agentName ? ' — ' + agentName : '');
+  if(!cur.r1){ cur.d1=today; cur.r1=tagged; }
+  else if(!cur.r2){ cur.d2=today; cur.r2=tagged; }
+  else if(!cur.r3){ cur.d3=today; cur.r3=tagged; }
 
   cur.nb = [cur.r1,cur.r2,cur.r3].filter(Boolean).length;
   cur.statut = result==='Rappeler plus tard' ? '🟡 Rappeler'
@@ -1103,6 +1148,7 @@ async function submitForm(){
     q15:formAnswers.q15||'',
     q15_libre:formAnswers.q15_libre||'',
     q16:formAnswers.q16||'',
+    agent:agentName||'',
   };
   let ok=false;
   try{
@@ -1113,9 +1159,10 @@ async function submitForm(){
     else console.warn('[submitForm] Apps Script error:', d.message||d);
   }catch(e){console.error('[submitForm] fetch error:', e);}
 
-  if(!cur.r1){cur.d1=today;cur.r1='Répondu';}
-  else if(!cur.r2){cur.d2=today;cur.r2='Répondu';}
-  else if(!cur.r3){cur.d3=today;cur.r3='Répondu';}
+  const rTag = 'Répondu' + (agentName ? ' — ' + agentName : '');
+  if(!cur.r1){cur.d1=today;cur.r1=rTag;}
+  else if(!cur.r2){cur.d2=today;cur.r2=rTag;}
+  else if(!cur.r3){cur.d3=today;cur.r3=rTag;}
   cur.nb=[cur.r1,cur.r2,cur.r3].filter(Boolean).length;
   cur.statut='✅ Typeform soumis';
   saveCRMUpdate(cur);
@@ -1252,10 +1299,28 @@ function refreshPerfTab(){
       return `<tr><td style="font-weight:500">${s}</td><td>${v.tot}</td><td style="color:var(--green)">${v.done}</td><td style="color:var(--amber)">${v.rapp}</td><td>${v.todo}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:3px;background:var(--s3);border-radius:2px;">${bar}</div><span style="font-size:10px;color:var(--tx3);width:28px">${taux}%</span></div></td></tr>`;
     }).join('');
 
+  // Par agent
+  const agentCalls = {};
+  drivers.forEach(d => {
+    [d.r1, d.r2, d.r3].forEach(r => {
+      if (!r) return;
+      const agent = (r.split(' — ')[1] || '').trim();
+      if (agent) agentCalls[agent] = (agentCalls[agent]||0) + 1;
+    });
+  });
+  const agentEntries = Object.entries(agentCalls).sort((a,b) => b[1]-a[1]);
+  document.getElementById('dagent').innerHTML = agentEntries.length
+    ? agentEntries.map(([name, count]) => `
+        <div class="dash-kpi">
+          <div class="dk-l">👤 ${name}</div>
+          <div class="dk-n" style="color:var(--purple)">${count} appel${count>1?'s':''}</div>
+        </div>`).join('')
+    : `<div style="color:var(--tx3);font-size:12px;padding:8px 0;">Aucun appel tracé — les agents doivent sélectionner leur nom.</div>`;
+
   // Rappels
   const rds = drivers.filter(d=>d.statut.includes('Rappeler'));
   document.getElementById('drapp').innerHTML = '<tr><th>Chauffeur</th><th>Superviseur</th><th>Tentatives</th><th>Dernier résultat</th><th>Dernier appel</th></tr>'
-    + (rds.length ? rds.map(d=>`<tr><td style="font-weight:500">${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td style="color:var(--amber)">${d.r1||'—'}</td><td style="color:var(--tx3)">${d.d1||'—'}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
+    + (rds.length ? rds.map(d=>`<tr><td style="font-weight:500">${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td style="color:var(--amber)">${(d.r1||'—').split(' — ')[0]}</td><td style="color:var(--tx3)">${(d.d1||'—').slice(0,10)}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
 
   renderDailyChart();
 }
@@ -1468,6 +1533,8 @@ function toast(msg,type='i'){
 
 loadDrivers();
 if(localStorage.getItem('theme')==='light') document.getElementById('theme-btn').textContent='☀️';
+document.getElementById('agent-badge').textContent = agentName ? '👤 ' + agentName : '👤 —';
+if(!agentName) setTimeout(showAgentModal, 800);
 </script>
 </body>
 </html>
