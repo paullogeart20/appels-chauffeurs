@@ -596,10 +596,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 <div class="agent-overlay hidden" id="agent-overlay">
   <div class="agent-box">
     <h2>👤 Quel agent êtes-vous ?</h2>
-    <p>Votre prénom sera associé à chaque appel pour le suivi individuel dans le dashboard.</p>
-    <input class="agent-input" id="agent-input" placeholder="Ex : Marie, Paul…" maxlength="30"
-      onkeydown="if(event.key==='Enter')confirmAgent()">
-    <button class="btn btn-primary" onclick="confirmAgent()">Confirmer →</button>
+    <p>Votre sélection sera mémorisée et associée à chaque appel.</p>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn btn-primary" style="flex:1;padding:14px;font-size:15px;" onclick="selectAgent('Ange')">Ange</button>
+      <button class="btn btn-primary" style="flex:1;padding:14px;font-size:15px;" onclick="selectAgent('Jennifer')">Jennifer</button>
+    </div>
   </div>
 </div>
 
@@ -616,16 +617,11 @@ let agentName = localStorage.getItem('agentName') || '';
 
 function showAgentModal() {
   document.getElementById('agent-overlay').classList.remove('hidden');
-  const inp = document.getElementById('agent-input');
-  inp.value = agentName;
-  setTimeout(() => inp.focus(), 50);
 }
-function confirmAgent() {
-  const val = document.getElementById('agent-input').value.trim();
-  if (!val) { toast('Entrez votre prénom', 'w'); return; }
-  agentName = val;
-  localStorage.setItem('agentName', val);
-  document.getElementById('agent-badge').textContent = '👤 ' + val;
+function selectAgent(name) {
+  agentName = name;
+  localStorage.setItem('agentName', name);
+  document.getElementById('agent-badge').textContent = '👤 ' + name;
   document.getElementById('agent-overlay').classList.add('hidden');
 }
 
