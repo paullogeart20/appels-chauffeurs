@@ -508,9 +508,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title">🚨 Indicateurs de risque</div>
     <div class="risk-grid">
       <div class="risk-card" id="rc-loyer">
-        <div class="dk-l">Loyer difficile à couvrir</div>
+        <div class="dk-l">Attentes non respectées</div>
         <div id="r-loyer" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
-        <div style="font-size:11px;color:var(--tx3);">Q3 · loyer difficile</div>
+        <div style="font-size:11px;color:var(--tx3);">Q13 · réalité ≠ promesse</div>
       </div>
       <div class="risk-card" id="rc-heures">
         <div class="dk-l">Travaillent +10h/jour</div>
@@ -523,9 +523,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <div style="font-size:11px;color:var(--tx3);">Q12 · ne finira pas</div>
       </div>
       <div class="risk-card" id="rc-double">
-        <div class="dk-l">Double risque</div>
+        <div class="dk-l">Cumul risques</div>
         <div id="r-double" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
-        <div style="font-size:11px;color:var(--tx3);">Loyer difficile + veut partir</div>
+        <div style="font-size:11px;color:var(--tx3);">+12h/j ET veut partir</div>
       </div>
     </div>
 
@@ -538,9 +538,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <div class="mini-bar"><div class="mini-fill" id="r-note-bar" style="width:0%;background:var(--green)"></div></div>
       </div>
       <div class="res-card">
-        <div class="dk-l">Effort vs Revenus insuffisant (Q6)</div>
+        <div class="dk-l">Roulent +12h/jour (Q7)</div>
         <div id="r-effort" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;color:var(--amber);margin:10px 0;">—</div>
-        <div style="font-size:11px;color:var(--tx3);">répondent "pas suffisant"</div>
+        <div style="font-size:11px;color:var(--tx3);">déclarent "Plus de 12h"</div>
       </div>
       <div class="res-card">
         <div class="dk-l">Exclusivité Yango ok (Q9)</div>
@@ -585,6 +585,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <!-- Q14 verbatim -->
     <div class="dash-section-title" style="margin-top:16px;">💬 Ce que Fleetch devrait changer — verbatim (Q14)</div>
     <div id="q14-list"></div>
+
+    <!-- Q17 Lieux de pause -->
+    <div class="dash-section-title" style="margin-top:16px;">📍 Points de pause & disponibilité (Q17)</div>
+    <div id="q17-bars"></div>
+    <div id="q17-verbatim" style="margin-top:10px;"></div>
 
     <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx3);text-align:center;">
       Données en temps réel depuis l'onglet "Réponses" du Google Sheet via Apps Script.
@@ -874,13 +879,6 @@ function buildQForm() {
     <textarea class="free-text" id="ft2" placeholder="Exprime-toi librement..." oninput="freeText('q2','ft2')"></textarea>
   </div>
 
-  <div class="q-item" id="qi3">
-    <div class="q-label">Couverture loyer — Ce que tu gagnes sur Yango te permet-il de couvrir ton loyer Fleetch et tes dépenses ?<span class="req">*</span></div>
-    <div class="choices" id="ch3">
-      ${['Oui confortablement','Oui mais c\'est juste','Non le loyer passe mais il reste peu pour moi','Non c\'est difficile de couvrir le loyer'].map(o=>`<div class="choice radio" onclick="radio(this,'ch3',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
-    </div>
-  </div>
-
   <div class="q-section">Bloc 2 — Véhicule</div>
 
   <div class="q-item" id="qi4">
@@ -922,14 +920,7 @@ function buildQForm() {
     </div>
   </div>
 
-  <div class="q-section">Bloc 3 — Revenus & charges</div>
-
-  <div class="q-item" id="qi6">
-    <div class="q-label">Effort vs revenus — Ce que tu gagnes sur Yango est-il à la hauteur de l'effort fourni ?<span class="req">*</span></div>
-    <div class="choices" id="ch6">
-      ${['Oui c\'est juste','Ça peut aller','Non c\'est pas suffisant'].map(o=>`<div class="choice radio" onclick="radio(this,'ch6',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
-    </div>
-  </div>
+  <div class="q-section">Bloc 3 — Activité</div>
 
   <div class="q-item" id="qi7">
     <div class="q-label">Heures par jour — Combien d'heures tu roules en moyenne pour couvrir loyer et dépenses ?<span class="req">*</span></div>
@@ -1021,6 +1012,16 @@ function buildQForm() {
     <div class="choices" id="ch16">
       ${['Oui je participe et je comprends bien comment ça marche','Je comprends mais j\'arrive pas toujours à participer','Je comprends pas vraiment comment ça marche','Je savais pas que Fleetch organisait des concours'].map(o=>`<div class="choice radio" onclick="radio(this,\'ch16\',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
+  </div>
+
+  <div class="q-section">Bloc 7 — Terrain</div>
+
+  <div class="q-item" id="qi17">
+    <div class="q-label">Points de pause — Quand tu fais une pause (repas, repos...), tu t'arrêtes généralement où ?<span class="req">*</span></div>
+    <div class="choices" id="ch17">
+      ${['Chez moi / Famille','Aéroport ou zone VTC officielle (CDG, Orly...)','Centre commercial ou restaurant','Parking ou zone de stationnement','Je reste dans mon véhicule entre deux courses'].map(o=>`<div class="choice radio" onclick="radio(this,'ch17',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+    <textarea class="free-text" id="ft17" placeholder="Précise si tu peux — quartier, ville, lieu spécifique..." style="margin-top:10px;" oninput="freeText('q17_libre','ft17')"></textarea>
   </div>`;
 
   // Build scale Q1
@@ -1098,17 +1099,17 @@ function radioQ15(el, event){
 }
 
 function updProg(){
-  const keys=['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16'];
+  const keys=['q1','q2','q4','q5','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17'];
   const done=keys.filter(k=>{
     const v=formAnswers[k];
     if(k==='q5') return v&&v.fiabilite&&v.confort&&v.consommation;
     if(k==='q8') return Array.isArray(v)&&v.length>0;
     return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
   }).length;
-  document.getElementById('qpct').textContent=`${done}/16`;
-  document.getElementById('qpf').style.width=`${Math.round(done/16*100)}%`;
+  document.getElementById('qpct').textContent=`${done}/15`;
+  document.getElementById('qpf').style.width=`${Math.round(done/15*100)}%`;
   const btn=document.getElementById('qsbtn');
-  if(btn) btn.disabled=done<16;
+  if(btn) btn.disabled=done<15;
 }
 
 async function submitForm(){
@@ -1124,13 +1125,11 @@ async function submitForm(){
     seniorite:cur.sen, date:new Date().toLocaleDateString('fr-FR'),
     q1:formAnswers.q1||'',
     q2:formAnswers.q2||'',
-    q3:formAnswers.q3||'',
     q4:formAnswers.q4||'',
     q5_fiabilite:q5.fiabilite||'',
     q5_confort:q5.confort||'',
     q5_consommation:q5.consommation||'',
     q5_libre:formAnswers.q5_libre||'',
-    q6:formAnswers.q6||'',
     q7:formAnswers.q7||'',
     q8:q8val,
     q9:formAnswers.q9||'',
@@ -1144,6 +1143,8 @@ async function submitForm(){
     q15:formAnswers.q15||'',
     q15_libre:formAnswers.q15_libre||'',
     q16:formAnswers.q16||'',
+    q17:formAnswers.q17||'',
+    q17_libre:formAnswers.q17_libre||'',
     agent:agentName||'',
   };
   let ok=false;
@@ -1385,10 +1386,10 @@ function refreshResultsTab(){
   }
 
   // ── Risk indicators ──────────────────────────────────────────
-  const loyerDiff = resp.filter(r=>r.q3&&(r.q3.includes('reste peu')||r.q3.includes('difficile'))).length;
+  const loyerDiff = resp.filter(r=>r.q13&&!r.q13.startsWith('Oui c')).length;
   const heurSur  = resp.filter(r=>r.q7&&(r.q7.includes('10h et 12h')||r.q7.includes('Plus de 12h'))).length;
   const churnRisk = resp.filter(r=>r.q12&&(r.q12.includes('Je sais pas')||r.q12.includes('Non je pense'))).length;
-  const double    = resp.filter(r=>r.q3&&r.q12&&(r.q3.includes('difficile'))&&(r.q12.includes('Non je pense'))).length;
+  const double    = resp.filter(r=>r.q7&&r.q12&&r.q7.includes('Plus de 12h')&&r.q12.includes('Non je pense')).length;
 
   const loyerPct  = n>0 ? Math.round(loyerDiff/n*100) : 0;
   const heurPct   = n>0 ? Math.round(heurSur/n*100) : 0;
@@ -1416,7 +1417,7 @@ function refreshResultsTab(){
   document.getElementById('r-note').textContent = avgNote;
   document.getElementById('r-note-bar').style.width = avgNote!=='—' ? (avgNote*10)+'%' : '0%';
 
-  const effortInsuf = resp.filter(r=>r.q6&&r.q6.includes('pas suffisant')).length;
+  const effortInsuf = resp.filter(r=>r.q7&&r.q7.includes('Plus de 12h')).length;
   document.getElementById('r-effort').textContent = pct(effortInsuf);
 
   const yangoOk = resp.filter(r=>r.q9&&r.q9==='Non').length;
@@ -1504,6 +1505,14 @@ function refreshResultsTab(){
   const verbatim = resp.filter(r=>r.q14&&String(r.q14).trim()).map(r=>String(r.q14).trim());
   document.getElementById('q14-list').innerHTML = verbatim.length ? verbatim.map(v=>`
     <div style="padding:8px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:6px;font-size:13px;color:var(--tx2);border-left:3px solid var(--blue-br);">${v}</div>`).join('') : no;
+
+  // Q17 — Lieux de pause
+  document.getElementById('q17-bars').innerHTML = barChart('q17','var(--purple)') || no;
+  const verbatim17 = resp.map(r=>r.q17_libre).filter(v=>v&&v.trim());
+  document.getElementById('q17-verbatim').innerHTML = verbatim17.length
+    ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:6px;">📝 Précisions libres :</div>`
+      + verbatim17.map(v=>`<div style="padding:7px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:5px;font-size:12px;color:var(--tx2);border-left:3px solid var(--purple-br);">${v}</div>`).join('')
+    : '';
 }
 
 // ── Theme ────────────────────────────────────────────────────
