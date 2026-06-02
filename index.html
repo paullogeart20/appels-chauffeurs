@@ -280,6 +280,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .agent-input:focus{border-color:var(--blue);}
 .agent-badge{padding:4px 10px;background:var(--purple-bg);border:1px solid var(--purple-br);color:var(--purple);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;}
 .agent-badge:hover{background:var(--purple-bg);opacity:.8;}
+.ma-liste-row{display:flex;align-items:center;gap:6px;padding:6px 14px 4px;border-bottom:1px solid var(--b1);flex-shrink:0;}
+.mt-btn{flex:1;padding:4px 6px;font-size:10px;font-weight:600;font-family:inherit;background:transparent;border:1px solid var(--b1);border-radius:5px;color:var(--tx3);cursor:pointer;transition:.12s;text-align:center;}
+.mt-btn.on{background:var(--purple-bg);border-color:var(--purple-br);color:var(--purple);}
+.assign-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:4px;vertical-align:middle;}
+.repartir-btn{padding:3px 8px;font-size:10px;font-weight:600;font-family:inherit;background:var(--blue-bg);border:1px solid var(--blue-br);color:var(--blue);border-radius:5px;cursor:pointer;white-space:nowrap;transition:.12s;}
+.repartir-btn:hover{opacity:.8;}
 </style>
 </head>
 <body>
@@ -323,6 +329,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
       <button class="qf" onclick="setF('todo',this)">À faire</button>
       <button class="qf" onclick="setF('rappel',this)">Rappels</button>
       <button class="qf" onclick="setF('done',this)">Faits</button>
+    </div>
+    <div class="ma-liste-row">
+      <button class="mt-btn on" id="mt-moi" onclick="toggleMyList(true,this)">👤 Ma liste</button>
+      <button class="mt-btn" id="mt-tous" onclick="toggleMyList(false,this)">Tous</button>
+      <button class="repartir-btn" onclick="assignDrivers()" title="Répartir les chauffeurs non assignés entre Ange et Jennifer">🔀 Répartir</button>
     </div>
     <div class="queue-list" id="queue-list"></div>
   </div>
@@ -611,6 +622,7 @@ const APPS_URL = 'https://script.google.com/macros/s/AKfycbwZePDKjBd1ALG9vhGPgvt
 if(localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-theme','light');
 
 let drivers = [], cur = null, curIdx = 0, activeFilter = 'all', formAnswers = {};
+let showMyListOnly = true;
 let agentName = localStorage.getItem('agentName') || '';
 
 function showAgentModal() {
@@ -632,8 +644,34 @@ function getQueue() {
       || (activeFilter === 'todo' && (d.statut.includes('À appeler')))
       || (activeFilter === 'rappel' && d.statut.includes('Rappeler'))
       || (activeFilter === 'done' && d.statut.includes('soumis'));
-    return ms && mf;
+    // Filtre "Ma liste" : ne montre que les chauffeurs assignés à cet agent (ou non assignés)
+    const ma = !showMyListOnly || !agentName || !d.assignee || d.assignee === agentName;
+    return ms && mf && ma;
   });
+}
+
+function toggleMyList(myOnly, btn) {
+  showMyListOnly = myOnly;
+  document.getElementById('mt-moi').classList.toggle('on', myOnly);
+  document.getElementById('mt-tous').classList.toggle('on', !myOnly);
+  renderQueue();
+}
+
+async function assignDrivers() {
+  const agents = ['Ange', 'Jennifer'];
+  const todo = drivers.filter(d => {
+    if (d.assignee) return false;
+    return !d.statut.includes('soumis') && !d.statut.includes('Injoignable') && !d.statut.includes('Refus');
+  });
+  if (!todo.length) { toast('Tous les chauffeurs sont déjà assignés', 'i'); return; }
+  toast(`Répartition de ${todo.length} chauffeurs...`, 'i');
+  todo.forEach((d, i) => { d.assignee = agents[i % 2]; });
+  // Sauvegarder en parallèle par lots pour ne pas bloquer
+  for (let i = 0; i < todo.length; i += 5) {
+    await Promise.all(todo.slice(i, i + 5).map(d => saveCRMUpdate(d)));
+  }
+  renderQueue();
+  toast(`✅ ${todo.length} chauffeurs répartis (${Math.ceil(todo.length/2)} Ange · ${Math.floor(todo.length/2)} Jennifer)`, 's');
 }
 
 function pClass(s) {
@@ -663,11 +701,13 @@ function renderQueue() {
     const el = document.createElement('div');
     el.className = 'drv-item' + (cur && cur.id === d.id ? ' active' : '') + (d.statut.includes('soumis') ? ' done' : '');
     el.onclick = () => selectDriver(d);
+    const assignColor = d.assignee === 'Ange' ? 'var(--purple)' : d.assignee === 'Jennifer' ? 'var(--blue)' : 'var(--tx3)';
+    const assignTag = d.assignee ? `<span class="assign-dot" style="background:${assignColor}"></span>` : '';
     el.innerHTML = `
       <span class="drv-num">${i+1}</span>
       <div class="drv-info">
-        <div class="drv-name">${d.nom}</div>
-        <div class="drv-sub">${d.sup || '—'}</div>
+        <div class="drv-name">${d.nom}${assignTag}</div>
+        <div class="drv-sub">${d.sup || '—'}${d.assignee ? ' · '+d.assignee : ''}</div>
       </div>
       <span class="pill ${pClass(d.statut)}">${pShort(d.statut)}</span>`;
     list.appendChild(el);
@@ -699,8 +739,12 @@ function setF(f, el) {
 
 function startQueue() {
   if(!drivers.length) { toast('Chargement en cours, patientez...', 'i'); return; }
-  const rappels = drivers.filter(d => d.statut && d.statut.includes('Rappeler'));
-  const todo = drivers.filter(d => {
+  // Respecte le filtre "Ma liste" : ne démarre que sur les drivers visibles
+  const pool = showMyListOnly && agentName
+    ? drivers.filter(d => !d.assignee || d.assignee === agentName)
+    : drivers;
+  const rappels = pool.filter(d => d.statut && d.statut.includes('Rappeler'));
+  const todo = pool.filter(d => {
     if(!d.statut) return false;
     return !d.statut.includes('soumis') && !d.statut.includes('Rappeler') && !d.statut.includes('Injoignable') && !d.statut.includes('Refus');
   });
@@ -708,7 +752,7 @@ function startQueue() {
   if(queue.length > 0) {
     selectDriver(queue[0]);
   } else {
-    toast('Tous les chauffeurs ont été traités !', 's');
+    toast(showMyListOnly ? 'Ta liste est complète ! 🎉' : 'Tous les chauffeurs ont été traités !', 's');
   }
 }
 
@@ -831,6 +875,7 @@ async function saveCRMUpdate(d) {
         d1: d.d1||'', r1: d.r1||'',
         d2: d.d2||'', r2: d.r2||'',
         d3: d.d3||'', r3: d.r3||'',
+        assignee: d.assignee||'',
       }),
     });
   } catch(e) { console.warn('CRM sync failed', e); }
@@ -1284,23 +1329,41 @@ function refreshPerfTab(){
       return `<tr><td style="font-weight:500">${s}</td><td>${v.tot}</td><td style="color:var(--green)">${v.done}</td><td style="color:var(--amber)">${v.rapp}</td><td>${v.todo}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:3px;background:var(--s3);border-radius:2px;">${bar}</div><span style="font-size:10px;color:var(--tx3);width:28px">${taux}%</span></div></td></tr>`;
     }).join('');
 
-  // Par agent
-  const agentCalls = {};
+  // Par agent — stats détaillées
+  const agentStats = {};
   drivers.forEach(d => {
-    [d.r1, d.r2, d.r3].forEach(r => {
+    // Compter depuis r1/r2/r3 (appels tracés)
+    [[d.r1,d.d1],[d.r2,d.d2],[d.r3,d.d3]].forEach(([r,dt]) => {
       if (!r) return;
       const agent = (r.split(' — ')[1] || '').trim();
-      if (agent) agentCalls[agent] = (agentCalls[agent]||0) + 1;
+      if (!agent) return;
+      if (!agentStats[agent]) agentStats[agent] = { total:0, today:0, done:0, assigned:0 };
+      agentStats[agent].total++;
+      if ((dt||'').slice(0,10) === todayStr) agentStats[agent].today++;
+      if (r.split(' — ')[0] === 'Répondu') agentStats[agent].done++;
     });
+    // Compter les assignés
+    if (d.assignee) {
+      if (!agentStats[d.assignee]) agentStats[d.assignee] = { total:0, today:0, done:0, assigned:0 };
+      agentStats[d.assignee].assigned++;
+    }
   });
-  const agentEntries = Object.entries(agentCalls).sort((a,b) => b[1]-a[1]);
+  const agentEntries = Object.entries(agentStats).sort((a,b) => b[1].total - a[1].total);
   document.getElementById('dagent').innerHTML = agentEntries.length
-    ? agentEntries.map(([name, count]) => `
-        <div class="dash-kpi">
-          <div class="dk-l">👤 ${name}</div>
-          <div class="dk-n" style="color:var(--purple)">${count} appel${count>1?'s':''}</div>
-        </div>`).join('')
-    : `<div style="color:var(--tx3);font-size:12px;padding:8px 0;">Aucun appel tracé — les agents doivent sélectionner leur nom.</div>`;
+    ? agentEntries.map(([name, s]) => {
+        const tauxStr = s.assigned > 0 ? Math.round(s.done/s.assigned*100)+'%' : '—';
+        const color = name === 'Ange' ? 'var(--purple)' : 'var(--blue)';
+        return `<div class="dash-kpi" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <div style="font-weight:600;color:${color};font-size:13px;">👤 ${name}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--tx2);">📞 <b>${s.total}</b> appels total</span>
+            <span style="font-size:11px;color:var(--green);">✅ <b>${s.done}</b> complétés</span>
+            <span style="font-size:11px;color:var(--amber);">☀️ <b>${s.today}</b> aujourd'hui</span>
+            <span style="font-size:11px;color:var(--tx3);">📋 <b>${s.assigned||'—'}</b> assignés · <b>${tauxStr}</b> taux</span>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="color:var(--tx3);font-size:12px;padding:8px 0;">Aucun appel tracé — les agents doivent sélectionner leur nom avant d'appeler.</div>`;
 
   // Rappels
   const rds = drivers.filter(d=>d.statut.includes('Rappeler'));
