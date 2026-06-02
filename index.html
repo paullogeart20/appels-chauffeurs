@@ -508,9 +508,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title">🚨 Indicateurs de risque</div>
     <div class="risk-grid">
       <div class="risk-card" id="rc-loyer">
-        <div class="dk-l">Attentes non respectées</div>
+        <div class="dk-l">Insatisfaction garage</div>
         <div id="r-loyer" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;color:var(--red);">—</div>
-        <div style="font-size:11px;color:var(--tx3);">Q13 · réalité ≠ promesse</div>
+        <div style="font-size:11px;color:var(--tx3);">Q18 · peu ou pas satisfait</div>
       </div>
       <div class="risk-card" id="rc-heures">
         <div class="dk-l">Travaillent +10h/jour</div>
@@ -548,9 +548,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
         <div style="font-size:11px;color:var(--tx3);">répondent "Non"</div>
       </div>
       <div class="res-card">
-        <div class="dk-l">Programme conforme (Q13)</div>
+        <div class="dk-l">Satisfaction garage (Q18)</div>
         <div id="r-attentes" style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin:10px 0;">—</div>
-        <div style="font-size:11px;color:var(--tx3);">attentes respectées</div>
+        <div style="font-size:11px;color:var(--tx3);">très satisfait ou satisfait</div>
       </div>
     </div>
 
@@ -562,21 +562,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title" style="margin-top:16px;">🚗 Satisfaction véhicule par modèle (Q4 + Q5)</div>
     <div id="vehicle-table"></div>
 
-    <!-- Q8 Problèmes Yango -->
-    <div class="dash-section-title" style="margin-top:16px;">⚠️ Top problèmes Yango (Q8)</div>
-    <div id="q8-bars"></div>
-
-    <!-- Q12 Projection + Q13 Attentes -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-      <div>
-        <div class="dash-section-title">🔮 Projection programme (Q12)</div>
-        <div id="q12-bars"></div>
-      </div>
-      <div>
-        <div class="dash-section-title">🤝 Attentes vs réalité (Q13)</div>
-        <div id="q13-bars"></div>
-      </div>
-    </div>
+    <!-- Q12 Projection -->
+    <div class="dash-section-title" style="margin-top:16px;">🔮 Projection programme (Q12)</div>
+    <div id="q12-bars"></div>
 
     <!-- Supervisors Q10+Q11 -->
     <div class="dash-section-title" style="margin-top:16px;">👤 Classement superviseurs (Q10 dispo + Q11 perception)</div>
@@ -590,6 +578,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title" style="margin-top:16px;">📍 Points de pause & disponibilité (Q17)</div>
     <div id="q17-bars"></div>
     <div id="q17-verbatim" style="margin-top:10px;"></div>
+
+    <!-- Q18 Satisfaction garage -->
+    <div class="dash-section-title" style="margin-top:16px;">🔧 Satisfaction garage Fleetch (Q18)</div>
+    <div id="q18-bars"></div>
+    <div id="q18-verbatim" style="margin-top:10px;"></div>
 
     <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--tx3);text-align:center;">
       Données en temps réel depuis l'onglet "Réponses" du Google Sheet via Apps Script.
@@ -931,17 +924,6 @@ function buildQForm() {
 
   <div class="q-section">Bloc 4 — Yango & travail</div>
 
-  <div class="q-item" id="qi8">
-    <div class="q-label">Problèmes Yango — Quels sont les 2 problèmes qui t'arrivent le plus souvent ? <span style="color:var(--tx3);font-size:11px;">(max 2)</span><span class="req">*</span></div>
-    <div class="choices" id="ch8">
-      ${['Les annulations de courses par les clients','Les notes injustes qui baissent mon score','Les problèmes techniques avec l\'appli','Les zones où il y a peu de demandes','Les clients qui se comportent mal'].map(o=>`<div class="choice" onclick="chkMax(this,'ch8',2,event)"><div class="choice-mark">✓</div><div class="choice-text">${o}</div></div>`).join('')}
-      <div class="choice" id="ch8-autre" onclick="chkMax(this,'ch8',2,event)"><div class="choice-mark">✓</div><div class="choice-text">Autre</div></div>
-    </div>
-    <div class="cond-field" id="cond-q8">
-      <textarea class="free-text" id="ft8" placeholder="Précise..." oninput="freeText('q8_autre','ft8')"></textarea>
-    </div>
-  </div>
-
   <div class="q-item" id="qi9">
     <div class="q-label">Exclusivité Yango — Le fait de travailler uniquement sur Yango te pose-t-il un problème ?<span class="req">*</span></div>
     <div class="choices" id="ch9">
@@ -978,17 +960,6 @@ function buildQForm() {
     </div>
   </div>
 
-  <div class="q-item" id="qi13">
-    <div class="q-label">Attentes vs réalité — La réalité du programme correspond-elle à ce que le scout t'avait dit ?<span class="req">*</span></div>
-    <div class="choices" id="ch13">
-      ${['Oui c\'est exactement ce qu\'on m\'avait expliqué','À peu près mais il y avait des choses que je savais pas','Non c\'est assez différent de ce qu\'on m\'avait promis'].map(o=>`<div class="choice radio" onclick="radioQ13(this,event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
-    </div>
-    <div class="cond-field" id="cond-q13">
-      <div class="q-label" style="font-size:12px;color:var(--tx2);">Qu'est-ce qui était différent ?</div>
-      <textarea class="free-text" id="ft13" placeholder="Explique..." oninput="freeText('q13_libre','ft13')"></textarea>
-    </div>
-  </div>
-
   <div class="q-item" id="qi14">
     <div class="q-label">Une chose à changer — Si Fleetch devait changer une seule chose pour que tu te sentes mieux ?<span class="req">*</span></div>
     <textarea class="free-text" id="ft14" placeholder="Ta priorité..." oninput="freeText('q14','ft14')"></textarea>
@@ -1014,14 +985,25 @@ function buildQForm() {
     </div>
   </div>
 
-  <div class="q-section">Bloc 7 — Terrain</div>
+  <div class="q-section">Bloc 7 — Terrain & service Fleetch</div>
 
   <div class="q-item" id="qi17">
     <div class="q-label">Points de pause — Quand tu fais une pause (repas, repos...), tu t'arrêtes généralement où ?<span class="req">*</span></div>
     <div class="choices" id="ch17">
-      ${['Chez moi / Famille','Aéroport ou zone VTC officielle (CDG, Orly...)','Centre commercial ou restaurant','Parking ou zone de stationnement','Je reste dans mon véhicule entre deux courses'].map(o=>`<div class="choice radio" onclick="radio(this,'ch17',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Chez moi / Famille','Aéroport ou zone VTC officielle (CDG, Orly...)','Centre commercial ou restaurant','Parking ou zone de stationnement','Je reste dans mon véhicule entre deux courses'].map(o=>`<div class="choice radio" onclick="radioQ17(this,event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
-    <textarea class="free-text" id="ft17" placeholder="Précise si tu peux — quartier, ville, lieu spécifique..." style="margin-top:10px;" oninput="freeText('q17_libre','ft17')"></textarea>
+    <div class="cond-field" id="cond-q17">
+      <div class="q-label" style="font-size:12px;color:var(--tx2);">Précise l'endroit exact :</div>
+      <textarea class="free-text" id="ft17" placeholder="Lieu, quartier, nom..." oninput="freeText('q17_libre','ft17')"></textarea>
+    </div>
+  </div>
+
+  <div class="q-item" id="qi18">
+    <div class="q-label">Garage Fleetch — Comment tu évalues le service du garage Fleetch (entretien, réparations, délais) ?<span class="req">*</span></div>
+    <div class="choices" id="ch18">
+      ${['Très satisfait','Satisfait','Peu satisfait','Pas du tout satisfait'].map(o=>`<div class="choice radio" onclick="radio(this,'ch18',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+    </div>
+    <textarea class="free-text" id="ft18" placeholder="Exprime-toi sur le garage : points forts, axes d'amélioration, expériences..." style="margin-top:10px;" oninput="freeText('q18_libre','ft18')"></textarea>
   </div>`;
 
   // Build scale Q1
@@ -1086,10 +1068,20 @@ function radioQ9(el, event){
   document.getElementById('cond-q9').classList.toggle('vis', v==='Oui'||v==='Un peu');
 }
 
-function radioQ13(el, event){
-  radio(el,'ch13',event);
-  const v = formAnswers.q13||'';
-  document.getElementById('cond-q13').classList.toggle('vis', !v.startsWith('Oui c'));
+const Q17_PLACEHOLDERS = {
+  'Chez moi / Famille': 'Ton quartier ou ta commune de résidence...',
+  'Aéroport ou zone VTC officielle (CDG, Orly...)': 'Quel aéroport ? Quel terminal ou zone de stationnement ?',
+  'Centre commercial ou restaurant': 'Nom du centre commercial ou du restaurant...',
+  'Parking ou zone de stationnement': 'Nom ou adresse du parking, de la zone...',
+  'Je reste dans mon véhicule entre deux courses': 'Quelle zone ou rue tu choisis généralement ?',
+};
+function radioQ17(el, event){
+  radio(el,'ch17',event);
+  const v = formAnswers.q17||'';
+  const cond = document.getElementById('cond-q17');
+  const ta = document.getElementById('ft17');
+  cond.classList.toggle('vis', !!v);
+  if(v && ta) ta.placeholder = Q17_PLACEHOLDERS[v] || 'Précise le lieu exact...';
 }
 
 function radioQ15(el, event){
@@ -1099,17 +1091,16 @@ function radioQ15(el, event){
 }
 
 function updProg(){
-  const keys=['q1','q2','q4','q5','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17'];
+  const keys=['q1','q2','q4','q5','q7','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
   const done=keys.filter(k=>{
     const v=formAnswers[k];
     if(k==='q5') return v&&v.fiabilite&&v.confort&&v.consommation;
-    if(k==='q8') return Array.isArray(v)&&v.length>0;
     return v!==undefined&&v!==null&&v!==''&&(Array.isArray(v)?v.length>0:true);
   }).length;
-  document.getElementById('qpct').textContent=`${done}/15`;
-  document.getElementById('qpf').style.width=`${Math.round(done/15*100)}%`;
+  document.getElementById('qpct').textContent=`${done}/14`;
+  document.getElementById('qpf').style.width=`${Math.round(done/14*100)}%`;
   const btn=document.getElementById('qsbtn');
-  if(btn) btn.disabled=done<15;
+  if(btn) btn.disabled=done<14;
 }
 
 async function submitForm(){
@@ -1118,8 +1109,6 @@ async function submitForm(){
   btn.textContent='Envoi...';btn.disabled=true;
   const today=new Date().toISOString().split('T')[0];
   const q5=formAnswers.q5||{};
-  const q8arr=Array.isArray(formAnswers.q8)?formAnswers.q8:[];
-  const q8val=formAnswers.q8_autre ? q8arr.join(';')+';Autre: '+formAnswers.q8_autre : q8arr.join(';');
   const payload={
     driverId:cur.id, nom:cur.nom, superviseur:cur.sup,
     seniorite:cur.sen, date:new Date().toLocaleDateString('fr-FR'),
@@ -1131,20 +1120,19 @@ async function submitForm(){
     q5_consommation:q5.consommation||'',
     q5_libre:formAnswers.q5_libre||'',
     q7:formAnswers.q7||'',
-    q8:q8val,
     q9:formAnswers.q9||'',
     q9_libre:formAnswers.q9_libre||'',
     q10:formAnswers.q10||'',
     q11:formAnswers.q11||'',
     q12:formAnswers.q12||'',
-    q13:formAnswers.q13||'',
-    q13_libre:formAnswers.q13_libre||'',
     q14:formAnswers.q14||'',
     q15:formAnswers.q15||'',
     q15_libre:formAnswers.q15_libre||'',
     q16:formAnswers.q16||'',
     q17:formAnswers.q17||'',
     q17_libre:formAnswers.q17_libre||'',
+    q18:formAnswers.q18||'',
+    q18_libre:formAnswers.q18_libre||'',
     agent:agentName||'',
   };
   let ok=false;
@@ -1386,7 +1374,7 @@ function refreshResultsTab(){
   }
 
   // ── Risk indicators ──────────────────────────────────────────
-  const loyerDiff = resp.filter(r=>r.q13&&!r.q13.startsWith('Oui c')).length;
+  const loyerDiff = resp.filter(r=>r.q18&&(r.q18.includes('Peu')||r.q18.includes('Pas du tout'))).length;
   const heurSur  = resp.filter(r=>r.q7&&(r.q7.includes('10h et 12h')||r.q7.includes('Plus de 12h'))).length;
   const churnRisk = resp.filter(r=>r.q12&&(r.q12.includes('Je sais pas')||r.q12.includes('Non je pense'))).length;
   const double    = resp.filter(r=>r.q7&&r.q12&&r.q7.includes('Plus de 12h')&&r.q12.includes('Non je pense')).length;
@@ -1423,7 +1411,7 @@ function refreshResultsTab(){
   const yangoOk = resp.filter(r=>r.q9&&r.q9==='Non').length;
   document.getElementById('r-yango').textContent = pct(yangoOk);
 
-  const attentesOk = resp.filter(r=>r.q13&&r.q13.startsWith('Oui c')).length;
+  const attentesOk = resp.filter(r=>r.q18&&(r.q18.includes('Très')||r.q18==='Satisfait')).length;
   document.getElementById('r-attentes').textContent = pct(attentesOk);
 
   // ── Q1 distribution ──────────────────────────────────────────
@@ -1465,12 +1453,8 @@ function refreshResultsTab(){
       </tr>`).join('')}
     </table>` : no;
 
-  // ── Q8 problèmes Yango ───────────────────────────────────────
-  document.getElementById('q8-bars').innerHTML = barChart('q8','var(--amber)',true) || no;
-
-  // ── Q12 projection + Q13 attentes ───────────────────────────
+  // ── Q12 projection ───────────────────────────────────────────
   document.getElementById('q12-bars').innerHTML = barChart('q12','var(--purple)') || no;
-  document.getElementById('q13-bars').innerHTML = barChart('q13','var(--blue)') || no;
 
   // ── Supervisors Q10+Q11 ──────────────────────────────────────
   const q10score = v => v&&v.startsWith('Toujours il')?5:v&&v.startsWith('La plupart')?4:v&&v.startsWith('Parfois')?3:v&&v.startsWith('Rarement')?2:v&&v.startsWith('Non')?1:null;
@@ -1510,8 +1494,16 @@ function refreshResultsTab(){
   document.getElementById('q17-bars').innerHTML = barChart('q17','var(--purple)') || no;
   const verbatim17 = resp.map(r=>r.q17_libre).filter(v=>v&&v.trim());
   document.getElementById('q17-verbatim').innerHTML = verbatim17.length
-    ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:6px;">📝 Précisions libres :</div>`
+    ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:6px;">📝 Lieux précisés :</div>`
       + verbatim17.map(v=>`<div style="padding:7px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:5px;font-size:12px;color:var(--tx2);border-left:3px solid var(--purple-br);">${v}</div>`).join('')
+    : '';
+
+  // Q18 — Satisfaction garage
+  document.getElementById('q18-bars').innerHTML = barChart('q18','var(--blue)') || no;
+  const verbatim18 = resp.map(r=>r.q18_libre).filter(v=>v&&v.trim());
+  document.getElementById('q18-verbatim').innerHTML = verbatim18.length
+    ? `<div style="font-size:12px;color:var(--tx3);margin-bottom:6px;">📝 Commentaires garage :</div>`
+      + verbatim18.map(v=>`<div style="padding:7px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:5px;font-size:12px;color:var(--tx2);border-left:3px solid var(--blue-br);">${v}</div>`).join('')
     : '';
 }
 
