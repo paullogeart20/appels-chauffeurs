@@ -331,9 +331,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
       <button class="qf" onclick="setF('done',this)">Faits</button>
     </div>
     <div class="ma-liste-row">
-      <button class="mt-btn on" id="mt-moi" onclick="toggleMyList(true,this)">👤 Ma liste</button>
-      <button class="mt-btn" id="mt-tous" onclick="toggleMyList(false,this)">Tous</button>
-      <button class="repartir-btn" onclick="assignDrivers()" title="Répartir les chauffeurs non assignés entre Ange et Jennifer">🔀 Répartir</button>
+      <button class="mt-btn on" id="mt-moi" onclick="toggleMyList(true)">👤 Ma liste</button>
+      <button class="mt-btn" id="mt-tous" onclick="toggleMyList(false)">Tous</button>
+      <button class="repartir-btn" onclick="assignDrivers()" title="Répartir les nouveaux chauffeurs">🔀</button>
+      <button class="repartir-btn" onclick="openAbsenceModal()" title="Mode absence" style="background:var(--amber-bg);border-color:var(--amber-br);color:var(--amber);">⚠️</button>
     </div>
     <div class="queue-list" id="queue-list"></div>
   </div>
@@ -602,6 +603,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 </div>
 
 
+<div class="agent-overlay hidden" id="absence-overlay">
+  <div class="agent-box">
+    <h2>⚠️ Mode absence</h2>
+    <p>Les chauffeurs <strong>non encore contactés</strong> de l'agent absent seront transférés à l'autre.<br>Les chauffeurs déjà en cours restent avec leur agent (il reprendra à son retour).</p>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn" style="flex:1;padding:12px;font-size:14px;background:var(--purple-bg);border-color:var(--purple-br);color:var(--purple);" onclick="absenceMode('Ange')">Ange est absente</button>
+      <button class="btn" style="flex:1;padding:12px;font-size:14px;background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);" onclick="absenceMode('Jennifer')">Jennifer est absente</button>
+    </div>
+    <button class="btn" style="margin-top:8px;width:100%;color:var(--tx3);" onclick="closeAbsenceModal()">Annuler</button>
+  </div>
+</div>
+
 <div class="agent-overlay hidden" id="agent-overlay">
   <div class="agent-box">
     <h2>👤 Quel agent êtes-vous ?</h2>
@@ -635,44 +648,72 @@ function selectAgent(name) {
   document.getElementById('agent-overlay').classList.add('hidden');
 }
 
+// ── Assignation — logique smart ──────────────────────────────
+// Propriétaire réel = celui qui a appelé en 1er (r1/r2/r3),
+// puis colonne O (assigné mais pas encore contacté), sinon vide.
+function effectiveAssignee(d) {
+  for (const r of [d.r1, d.r2, d.r3]) {
+    if (r) { const a = (r.split(' — ')[1]||'').trim(); if (a) return a; }
+  }
+  return d.assignee || '';
+}
+
 // ── Queue navigation ─────────────────────────────────────────
 function getQueue() {
   const s = document.getElementById('srch').value.toLowerCase();
   return drivers.filter(d => {
     const ms = !s || `${d.nom} ${d.id}`.toLowerCase().includes(s);
     const mf = activeFilter === 'all'
-      || (activeFilter === 'todo' && (d.statut.includes('À appeler')))
+      || (activeFilter === 'todo' && d.statut.includes('À appeler'))
       || (activeFilter === 'rappel' && d.statut.includes('Rappeler'))
       || (activeFilter === 'done' && d.statut.includes('soumis'));
-    // Filtre "Ma liste" : ne montre que les chauffeurs assignés à cet agent (ou non assignés)
-    const ma = !showMyListOnly || !agentName || !d.assignee || d.assignee === agentName;
+    const eff = effectiveAssignee(d);
+    const ma = !showMyListOnly || !agentName || !eff || eff === agentName;
     return ms && mf && ma;
   });
 }
 
-function toggleMyList(myOnly, btn) {
+function toggleMyList(myOnly) {
   showMyListOnly = myOnly;
   document.getElementById('mt-moi').classList.toggle('on', myOnly);
   document.getElementById('mt-tous').classList.toggle('on', !myOnly);
   renderQueue();
 }
 
+// Répartit UNIQUEMENT les chauffeurs pas encore contactés ET pas encore assignés
 async function assignDrivers() {
   const agents = ['Ange', 'Jennifer'];
-  const todo = drivers.filter(d => {
-    if (d.assignee) return false;
-    return !d.statut.includes('soumis') && !d.statut.includes('Injoignable') && !d.statut.includes('Refus');
-  });
-  if (!todo.length) { toast('Tous les chauffeurs sont déjà assignés', 'i'); return; }
-  toast(`Répartition de ${todo.length} chauffeurs...`, 'i');
+  const todo = drivers.filter(d => !effectiveAssignee(d) &&
+    !d.statut.includes('soumis') && !d.statut.includes('Injoignable') && !d.statut.includes('Refus'));
+  if (!todo.length) { toast('Aucun nouveau chauffeur à répartir', 'i'); return; }
+  toast(`Répartition de ${todo.length} nouveaux chauffeurs...`, 'i');
   todo.forEach((d, i) => { d.assignee = agents[i % 2]; });
-  // Sauvegarder en parallèle par lots pour ne pas bloquer
-  for (let i = 0; i < todo.length; i += 5) {
-    await Promise.all(todo.slice(i, i + 5).map(d => saveCRMUpdate(d)));
-  }
+  for (let i = 0; i < todo.length; i += 5)
+    await Promise.all(todo.slice(i, i+5).map(d => saveCRMUpdate(d)));
   renderQueue();
-  toast(`✅ ${todo.length} chauffeurs répartis (${Math.ceil(todo.length/2)} Ange · ${Math.floor(todo.length/2)} Jennifer)`, 's');
+  const nA = todo.filter(d=>d.assignee==='Ange').length;
+  const nJ = todo.filter(d=>d.assignee==='Jennifer').length;
+  toast(`✅ ${todo.length} répartis — Ange: ${nA} · Jennifer: ${nJ}`, 's');
 }
+
+// Mode absence : transfère les chauffeurs NON ENCORE CONTACTÉS de l'absent vers l'autre
+// (définitif — l'agent qui reprend continue jusqu'au bout)
+async function absenceMode(absent) {
+  const other = absent === 'Ange' ? 'Jennifer' : 'Ange';
+  // Chauffeurs assignés à l'absent mais sans aucun appel
+  const toTransfer = drivers.filter(d => effectiveAssignee(d) === absent && !d.r1 && !d.r2 && !d.r3);
+  if (!toTransfer.length) { toast(`Aucun chauffeur non contacté assigné à ${absent}`, 'i'); closeAbsenceModal(); return; }
+  toast(`Transfert de ${toTransfer.length} chauffeurs vers ${other}...`, 'i');
+  toTransfer.forEach(d => { d.assignee = other; });
+  for (let i = 0; i < toTransfer.length; i += 5)
+    await Promise.all(toTransfer.slice(i, i+5).map(d => saveCRMUpdate(d)));
+  renderQueue();
+  closeAbsenceModal();
+  toast(`✅ ${toTransfer.length} chauffeurs transférés à ${other}`, 's');
+}
+
+function openAbsenceModal()  { document.getElementById('absence-overlay').classList.remove('hidden'); }
+function closeAbsenceModal() { document.getElementById('absence-overlay').classList.add('hidden'); }
 
 function pClass(s) {
   if(s.includes('À appeler')) return 'p-a';
@@ -701,13 +742,14 @@ function renderQueue() {
     const el = document.createElement('div');
     el.className = 'drv-item' + (cur && cur.id === d.id ? ' active' : '') + (d.statut.includes('soumis') ? ' done' : '');
     el.onclick = () => selectDriver(d);
-    const assignColor = d.assignee === 'Ange' ? 'var(--purple)' : d.assignee === 'Jennifer' ? 'var(--blue)' : 'var(--tx3)';
-    const assignTag = d.assignee ? `<span class="assign-dot" style="background:${assignColor}"></span>` : '';
+    const eff = effectiveAssignee(d);
+    const assignColor = eff === 'Ange' ? 'var(--purple)' : eff === 'Jennifer' ? 'var(--blue)' : 'var(--tx3)';
+    const assignTag = eff ? `<span class="assign-dot" style="background:${assignColor}"></span>` : '';
     el.innerHTML = `
       <span class="drv-num">${i+1}</span>
       <div class="drv-info">
         <div class="drv-name">${d.nom}${assignTag}</div>
-        <div class="drv-sub">${d.sup || '—'}${d.assignee ? ' · '+d.assignee : ''}</div>
+        <div class="drv-sub">${d.sup || '—'}${eff ? ' · '+eff : ''}</div>
       </div>
       <span class="pill ${pClass(d.statut)}">${pShort(d.statut)}</span>`;
     list.appendChild(el);
@@ -741,7 +783,7 @@ function startQueue() {
   if(!drivers.length) { toast('Chargement en cours, patientez...', 'i'); return; }
   // Respecte le filtre "Ma liste" : ne démarre que sur les drivers visibles
   const pool = showMyListOnly && agentName
-    ? drivers.filter(d => !d.assignee || d.assignee === agentName)
+    ? drivers.filter(d => { const e = effectiveAssignee(d); return !e || e === agentName; })
     : drivers;
   const rappels = pool.filter(d => d.statut && d.statut.includes('Rappeler'));
   const todo = pool.filter(d => {
@@ -1342,10 +1384,11 @@ function refreshPerfTab(){
       if ((dt||'').slice(0,10) === todayStr) agentStats[agent].today++;
       if (r.split(' — ')[0] === 'Répondu') agentStats[agent].done++;
     });
-    // Compter les assignés
-    if (d.assignee) {
-      if (!agentStats[d.assignee]) agentStats[d.assignee] = { total:0, today:0, done:0, assigned:0 };
-      agentStats[d.assignee].assigned++;
+    // Compter les assignés (via effectiveAssignee pour inclure l'historique)
+    const eff = effectiveAssignee(d);
+    if (eff) {
+      if (!agentStats[eff]) agentStats[eff] = { total:0, today:0, done:0, assigned:0 };
+      agentStats[eff].assigned++;
     }
   });
   const agentEntries = Object.entries(agentStats).sort((a,b) => b[1].total - a[1].total);
