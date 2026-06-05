@@ -964,7 +964,7 @@ function buildQForm() {
   <div class="q-item" id="qi4">
     <div class="q-label">Modèle véhicule — Quel est ton véhicule Fleetch ?<span class="req">*</span></div>
     <div class="choices" id="ch4">
-      ${['Suzuki Spresso','Suzuki Dzire','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'].map(o=>`<div class="choice radio" onclick="radio(this,'ch4',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
+      ${['Suzuki Spresso','Suzuki Dzire','Suzuki Swift','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'].map(o=>`<div class="choice radio" onclick="radio(this,'ch4',event)"><div class="choice-mark"></div><div class="choice-text">${o}</div></div>`).join('')}
     </div>
   </div>
 
@@ -1532,7 +1532,7 @@ function refreshResultsTab(){
     </div>`).join('');
 
   // ── Vehicle satisfaction Q4+Q5 ───────────────────────────────
-  const vModels=['Suzuki Spresso','Suzuki Dzire','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'];
+  const vModels=['Suzuki Spresso','Suzuki Dzire','Suzuki Swift','GAC Alvin','Dongfeng','Leapmotor','Kaiyi'];
   const vScore = v => v==='Très satisfait'?2:v==='Satisfait'?1:v==='Pas satisfait'?0:null;
   const vAvg = (arr) => { const f=arr.filter(v=>v!==null); return f.length ? (f.reduce((a,b)=>a+b,0)/f.length/2*100).toFixed(0)+'%' : '—'; };
   const vData = {};
