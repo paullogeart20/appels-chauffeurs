@@ -177,6 +177,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 /* Toasts */
 .toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:99;pointer-events:none;}
 .toast{padding:8px 14px;border-radius:var(--r);font-size:12px;font-weight:500;border:1px solid var(--b2);animation:tin .18s ease;pointer-events:all;}
+.notif-progress{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--blue-br);border-radius:var(--r2);padding:14px 22px;font-size:13px;z-index:999;box-shadow:0 4px 24px rgba(0,0,0,.5);animation:notif-in .25s ease;text-align:center;line-height:1.7;cursor:pointer;min-width:290px;}
+@keyframes notif-in{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes tin{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 .toast.s{background:var(--green-bg);border-color:var(--green-br);color:var(--green);}
 .toast.i{background:var(--blue-bg);border-color:var(--blue-br);color:var(--blue);}
@@ -902,6 +904,8 @@ function quickResult(result) {
   // Save attempt to GSheet (fire-and-forget)
   saveCRMUpdate(cur);
 
+  setTimeout(() => maybeNotifyProgress(), 1100);
+
   // Advance to next driver after 1s for all 3 actions
   setTimeout(() => navDriver(1), 1000);
 }
@@ -1242,6 +1246,7 @@ async function submitForm(){
   showSuccess(ok?'Réponses enregistrées dans le GSheet ✓':'Appel enregistré (GSheet non connecté)');
   if(ok) toast('✅ Réponses envoyées !','s');
   else toast('⚠️ GSheet non connecté — vérifier Apps Script','w');
+  maybeNotifyProgress();
 }
 
 // ── Drivers ─────────────────────────────────────────────────
@@ -1328,6 +1333,11 @@ function refreshPerfTab(){
   const todayStr = new Date().toISOString().split('T')[0];
   const todayFmt = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const todayCount = drivers.filter(d => (d.d1||'').slice(0,10)===todayStr||(d.d2||'').slice(0,10)===todayStr||(d.d3||'').slice(0,10)===todayStr).length;
+  const todayForms = drivers.filter(d =>
+    [[d.r1,d.d1],[d.r2,d.d2],[d.r3,d.d3]].some(([r,dt]) =>
+      r && r.split(' — ')[0]==='Répondu' && (dt||'').slice(0,10)===todayStr
+    )
+  ).length;
   document.getElementById('today-count').textContent = todayCount;
   document.getElementById('today-date').textContent = todayFmt;
   const objPct = Math.min(100, Math.round(todayCount/dailyObjective*100));
@@ -1351,6 +1361,8 @@ function refreshPerfTab(){
     ['Restants', reste, 'var(--tx2)'],
     ["Appels aujourd'hui", todayCount, todayCount>=dailyObjective?'var(--green)':'var(--blue)'],
     ['Objectif jour', dailyObjective, 'var(--purple)'],
+    ["Formulaires aujourd'hui", todayForms, todayForms>=20?'var(--green)':todayForms>0?'var(--amber)':'var(--tx3)'],
+    ['Taux form./appels', todayCount>0?Math.round(todayForms/todayCount*100)+'%':'—', 'var(--blue)'],
   ].map(([l,v,c])=>`<div class="dash-kpi"><div class="dk-l">${l}</div><div class="dk-n" style="color:${c}">${v}</div></div>`).join('');
 
   // Par superviseur
@@ -1379,15 +1391,19 @@ function refreshPerfTab(){
       if (!r) return;
       const agent = (r.split(' — ')[1] || '').trim();
       if (!agent) return;
-      if (!agentStats[agent]) agentStats[agent] = { total:0, today:0, done:0, assigned:0 };
+      if (!agentStats[agent]) agentStats[agent] = { total:0, today:0, done:0, assigned:0, todayForms:0 };
       agentStats[agent].total++;
-      if ((dt||'').slice(0,10) === todayStr) agentStats[agent].today++;
-      if (r.split(' — ')[0] === 'Répondu') agentStats[agent].done++;
+      const isToday = (dt||'').slice(0,10) === todayStr;
+      if (isToday) agentStats[agent].today++;
+      if (r.split(' — ')[0] === 'Répondu') {
+        agentStats[agent].done++;
+        if (isToday) agentStats[agent].todayForms++;
+      }
     });
     // Compter les assignés (via effectiveAssignee pour inclure l'historique)
     const eff = effectiveAssignee(d);
     if (eff) {
-      if (!agentStats[eff]) agentStats[eff] = { total:0, today:0, done:0, assigned:0 };
+      if (!agentStats[eff]) agentStats[eff] = { total:0, today:0, done:0, assigned:0, todayForms:0 };
       agentStats[eff].assigned++;
     }
   });
@@ -1395,14 +1411,16 @@ function refreshPerfTab(){
   document.getElementById('dagent').innerHTML = agentEntries.length
     ? agentEntries.map(([name, s]) => {
         const tauxStr = s.assigned > 0 ? Math.round(s.done/s.assigned*100)+'%' : '—';
+        const todayRate = s.today > 0 ? Math.round(s.todayForms/s.today*100)+'%' : '—';
         const color = name === 'Ange' ? 'var(--purple)' : 'var(--blue)';
+        const formColor = s.todayForms>=20?'var(--green)':s.todayForms>0?'var(--amber)':'var(--tx3)';
         return `<div class="dash-kpi" style="flex-direction:column;align-items:flex-start;gap:6px;">
           <div style="font-weight:600;color:${color};font-size:13px;">👤 ${name}</div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <span style="font-size:11px;color:var(--tx2);">📞 <b>${s.total}</b> appels total</span>
+            <span style="font-size:11px;color:var(--tx2);">📞 <b>${s.total}</b> appels total · <b>${s.today}</b> aujourd'hui</span>
             <span style="font-size:11px;color:var(--green);">✅ <b>${s.done}</b> complétés</span>
-            <span style="font-size:11px;color:var(--amber);">☀️ <b>${s.today}</b> aujourd'hui</span>
-            <span style="font-size:11px;color:var(--tx3);">📋 <b>${s.assigned||'—'}</b> assignés · <b>${tauxStr}</b> taux</span>
+            <span style="font-size:11px;color:${formColor};">📋 <b>${s.todayForms}</b> form. aujourd'hui · <b>${todayRate}</b> form/appels</span>
+            <span style="font-size:11px;color:var(--tx3);">📊 <b>${s.assigned||'—'}</b> assignés · <b>${tauxStr}</b> taux global</span>
           </div>
         </div>`;
       }).join('')
@@ -1626,6 +1644,41 @@ function toggleTheme(){
     document.getElementById('theme-btn').textContent = '☀️';
     localStorage.setItem('theme','light');
   }
+}
+
+function getAgentTodayStats(){
+  if(!agentName) return {calls:0, forms:0};
+  const todayStr = new Date().toISOString().split('T')[0];
+  let calls=0, forms=0;
+  drivers.forEach(d=>{
+    [[d.r1,d.d1],[d.r2,d.d2],[d.r3,d.d3]].forEach(([r,dt])=>{
+      if(!r || (r.split(' — ')[1]||'').trim()!==agentName) return;
+      if((dt||'').slice(0,10)!==todayStr) return;
+      calls++;
+      if(r.split(' — ')[0]==='Répondu') forms++;
+    });
+  });
+  return {calls, forms};
+}
+
+function showProgressNotif(calls, forms, obj){
+  const existing=document.getElementById('progress-notif');
+  if(existing) existing.remove();
+  const el=document.createElement('div');
+  el.id='progress-notif';
+  el.className='notif-progress';
+  const c=calls>1?'s':'', f=forms>1?'s':'';
+  el.innerHTML=`📞 <b>${calls}</b> appel${c} passé${c} aujourd'hui &nbsp;·&nbsp; ✅ <b>${forms}</b> formulaire${f} complété${f}<br><span style="font-size:11px;color:var(--tx3);">Objectif : ${obj} formulaires/jour/personne</span>`;
+  el.onclick=()=>el.remove();
+  document.body.appendChild(el);
+  setTimeout(()=>{ const e=document.getElementById('progress-notif'); if(e) e.remove(); }, 6000);
+}
+
+function maybeNotifyProgress(){
+  if(!agentName || Math.random()>0.3) return;
+  const {calls, forms}=getAgentTodayStats();
+  if(calls===0) return;
+  showProgressNotif(calls, forms, 20);
 }
 
 function toast(msg,type='i'){
