@@ -492,10 +492,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-kpi-grid" id="dk-global"></div>
 
     <!-- Appels par jour -->
-    <div class="dash-section-title">📅 Appels par jour — 14 derniers jours</div>
+    <div class="dash-section-title">📅 Appels & questionnaires — 14 derniers jours<span style="margin-left:auto;display:flex;gap:10px;font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;"><span style="color:var(--blue)">▮ appels</span><span style="color:rgba(52,211,153,.7)">▮ formulaires</span></span></div>
     <div class="vchart-wrap">
       <div class="vchart" id="daily-chart"></div>
     </div>
+
+    <!-- Questionnaires par agent par jour -->
+    <div class="dash-section-title">📋 Questionnaires soumis par agent — 14 derniers jours</div>
+    <div id="dagent-daily"></div>
 
     <!-- Par agent -->
     <div class="dash-section-title">👥 Par agent</div>
@@ -1435,16 +1439,24 @@ function refreshPerfTab(){
 }
 
 function renderDailyChart(){
-  // Count calls per date from d1/d2/d3 fields
-  const counts = {};
+  const counts = {}, formCounts = {}, agentFormCounts = {};
   drivers.forEach(d => {
     [d.d1, d.d2, d.d3].forEach(dt => {
       const k = (dt||'').trim().slice(0,10);
       if(k) counts[k] = (counts[k]||0) + 1;
     });
+    [[d.r1,d.d1],[d.r2,d.d2],[d.r3,d.d3]].forEach(([r,dt]) => {
+      if(!r || r.split(' — ')[0]!=='Répondu') return;
+      const k = (dt||'').trim().slice(0,10);
+      if(!k) return;
+      formCounts[k] = (formCounts[k]||0) + 1;
+      const agent = (r.split(' — ')[1]||'').trim();
+      if(!agent) return;
+      if(!agentFormCounts[agent]) agentFormCounts[agent] = {};
+      agentFormCounts[agent][k] = (agentFormCounts[agent][k]||0) + 1;
+    });
   });
 
-  // Build last 14 days
   const days = [];
   const today = new Date();
   for(let i = 13; i >= 0; i--){
@@ -1452,21 +1464,54 @@ function renderDailyChart(){
     d.setDate(today.getDate() - i);
     const key = d.toISOString().split('T')[0];
     const lbl = d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}).replace('.','');
-    days.push({key, lbl, count: counts[key]||0});
+    days.push({key, lbl, calls: counts[key]||0, forms: formCounts[key]||0});
   }
 
-  const maxC = Math.max(...days.map(d=>d.count), 1);
+  const maxC = Math.max(...days.map(d=>Math.max(d.calls, d.forms)), 1);
   const el = document.getElementById('daily-chart');
   if(!el) return;
   el.innerHTML = days.map(d => {
-    const pct = Math.round(d.count / maxC * 100);
-    const col = d.count >= dailyObjective ? 'var(--green)' : d.count > 0 ? 'var(--blue)' : 'var(--s3)';
+    const callPct = Math.round(d.calls / maxC * 100);
+    const formPct = Math.round(d.forms / maxC * 100);
+    const callCol = d.calls >= dailyObjective ? 'var(--green)' : d.calls > 0 ? 'var(--blue)' : 'var(--s3)';
+    const formCol = d.forms >= 20 ? 'var(--green)' : d.forms > 0 ? 'rgba(52,211,153,.6)' : 'var(--s3)';
+    const lbl2 = (d.calls > 0 || d.forms > 0) ? `${d.calls}/${d.forms}` : '';
     return `<div class="vbar-col">
-      <span class="vbar-cnt">${d.count||''}</span>
-      <div class="vbar-area"><div class="vbar" style="height:${pct}%;background:${col};" title="${d.count} appel${d.count>1?'s':''}"></div></div>
+      <span class="vbar-cnt" title="${d.calls} appels / ${d.forms} formulaires">${lbl2}</span>
+      <div class="vbar-area" style="gap:2px;">
+        <div class="vbar" style="height:${callPct}%;background:${callCol};width:calc(50% - 1px);" title="${d.calls} appel${d.calls>1?'s':''}"></div>
+        <div class="vbar" style="height:${formPct}%;background:${formCol};width:calc(50% - 1px);" title="${d.forms} formulaire${d.forms>1?'s':''}"></div>
+      </div>
       <span class="vbar-lbl">${d.lbl}</span>
     </div>`;
   }).join('');
+
+  // Tableau questionnaires par agent par jour
+  const dagent = document.getElementById('dagent-daily');
+  if(!dagent) return;
+  const agents = Object.keys(agentFormCounts).sort();
+  const activeDays = days.filter(d => d.forms > 0);
+  if(!agents.length || !activeDays.length){
+    dagent.innerHTML = '<div style="color:var(--tx3);font-size:12px;padding:4px 0;">Aucun formulaire tracé sur les 14 derniers jours.</div>';
+    return;
+  }
+  const agentColors = {Ange:'var(--purple)', Jennifer:'var(--blue)'};
+  dagent.innerHTML = `<table class="dash-tbl">
+    <tr>
+      <th>Date</th>
+      ${agents.map(a=>`<th style="color:${agentColors[a]||'var(--tx2)'}">${a}</th>`).join('')}
+      <th style="color:var(--green)">Total</th>
+    </tr>
+    ${activeDays.map(d=>{
+      const vals = agents.map(a=>(agentFormCounts[a]||{})[d.key]||0);
+      const total = vals.reduce((s,v)=>s+v,0);
+      return `<tr>
+        <td style="color:var(--tx3);font-size:11px;">${d.lbl}</td>
+        ${vals.map(v=>`<td style="font-weight:${v>0?'600':'400'};color:${v>0?'var(--green)':'var(--tx3)'};">${v||'—'}</td>`).join('')}
+        <td style="font-weight:600;color:var(--green);">${total}</td>
+      </tr>`;
+    }).join('')}
+  </table>`;
 }
 
 function refreshResultsTab(){
