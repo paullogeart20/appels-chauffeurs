@@ -1499,7 +1499,7 @@ function renderDailyChart(){
   dagent.innerHTML = `<table class="dash-tbl">
     <tr>
       <th>Date</th>
-      ${agents.map(a=>`<th style="color:${agentColors[a]||'var(--tx2)'}">${a}</th>`).join('')}
+      ${agents.map(a=>`<th style="color:${agentColors[a]||'var(--tx2)'}">${esc(a)}</th>`).join('')}
       <th style="color:var(--green)">Total</th>
     </tr>
     ${activeDays.map(d=>{
@@ -1690,6 +1690,8 @@ function toggleTheme(){
     localStorage.setItem('theme','light');
   }
 }
+
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function getAgentTodayStats(){
   if(!agentName) return {calls:0, forms:0};
