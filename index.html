@@ -1474,12 +1474,19 @@ function renderWeeklyChart(){
     });
   });
 
-  // Fixed 8 weeks starting from the week of June 1, 2026
+  // Fixed window from June 1, 2026 up to (and including) the current week
   const startMonday = new Date('2026-06-01T12:00:00');
+  const today = new Date();
+  const diffToMon = today.getDay() === 0 ? -6 : 1 - today.getDay();
+  const thisMonday = new Date(today);
+  thisMonday.setDate(today.getDate() + diffToMon);
+  thisMonday.setHours(12, 0, 0, 0);
+
   const weeks = [];
   for(let i = 0; i < 8; i++){
     const mon = new Date(startMonday);
     mon.setDate(startMonday.getDate() + i * 7);
+    if(mon > thisMonday) break;
     const key = mon.toISOString().split('T')[0];
     const lbl = mon.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}).replace('.','');
     const total = weekCalls[key]||0;
