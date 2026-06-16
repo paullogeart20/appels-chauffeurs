@@ -243,6 +243,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
 .vbar{width:100%;border-radius:3px 3px 0 0;transition:height .4s ease,background .3s;min-height:0;}
 .vbar-lbl{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;padding-top:3px;}
 
+/* ── STACKED WEEKLY CHART ── */
+.stacked-chart{display:flex;align-items:flex-end;gap:4px;height:130px;}
+.sbar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;min-width:0;}
+.sbar-total{font-size:10px;font-weight:700;color:var(--tx2);font-family:'DM Mono',monospace;height:14px;line-height:14px;text-align:center;}
+.sbar-area{flex:1;width:100%;display:flex;align-items:flex-end;}
+.sbar-lbl{font-size:8px;color:var(--tx3);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;padding-top:3px;}
+
 /* ── FREE TEXT ── */
 .free-text{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-family:inherit;font-size:13px;resize:vertical;min-height:68px;outline:none;line-height:1.5;margin-top:2px;}
 .free-text:focus{border-color:var(--blue);}
@@ -495,6 +502,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-
     <div class="dash-section-title">📅 Appels & questionnaires — 14 derniers jours<span style="margin-left:auto;display:flex;gap:10px;font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;"><span style="color:var(--blue)">▮ appels</span><span style="color:rgba(52,211,153,.7)">▮ formulaires</span></span></div>
     <div class="vchart-wrap">
       <div class="vchart" id="daily-chart"></div>
+    </div>
+
+    <!-- Graphique hebdomadaire empilé -->
+    <div class="dash-section-title">📅 Appels par semaine — 8 dernières semaines<span style="margin-left:auto;display:flex;gap:10px;font-size:9px;font-weight:500;text-transform:none;letter-spacing:0;"><span style="color:var(--green)">▮ questionnaires</span><span style="color:var(--blue)">▮ non répondus</span></span></div>
+    <div class="vchart-wrap">
+      <div class="stacked-chart" id="weekly-chart"></div>
     </div>
 
     <!-- Questionnaires par agent par jour -->
@@ -1436,6 +1449,67 @@ function refreshPerfTab(){
     + (rds.length ? rds.map(d=>`<tr><td style="font-weight:500">${d.nom}</td><td>${d.sup||'—'}</td><td>${d.nb}</td><td style="color:var(--amber)">${(d.r1||'—').split(' — ')[0]}</td><td style="color:var(--tx3)">${(d.d1||'—').slice(0,10)}</td></tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:14px;">Aucun rappel en attente 🎉</td></tr>');
 
   renderDailyChart();
+  renderWeeklyChart();
+}
+
+function renderWeeklyChart(){
+  const weekCalls = {}, weekForms = {};
+
+  function toWeekKey(dateStr) {
+    if(!dateStr) return null;
+    const d = new Date(dateStr.slice(0,10) + 'T12:00:00');
+    const dow = d.getDay();
+    const diff = dow === 0 ? -6 : 1 - dow;
+    d.setDate(d.getDate() + diff);
+    return d.toISOString().split('T')[0];
+  }
+
+  drivers.forEach(d => {
+    [[d.r1,d.d1],[d.r2,d.d2],[d.r3,d.d3]].forEach(([r,dt]) => {
+      if(!r || !dt) return;
+      const k = toWeekKey((dt||'').trim());
+      if(!k) return;
+      weekCalls[k] = (weekCalls[k]||0) + 1;
+      if(r.split(' — ')[0] === 'Répondu') weekForms[k] = (weekForms[k]||0) + 1;
+    });
+  });
+
+  // Last 8 weeks (Monday-based)
+  const today = new Date();
+  const diffToMon = today.getDay() === 0 ? -6 : 1 - today.getDay();
+  const thisMonday = new Date(today);
+  thisMonday.setDate(today.getDate() + diffToMon);
+
+  const weeks = [];
+  for(let i = 7; i >= 0; i--){
+    const mon = new Date(thisMonday);
+    mon.setDate(thisMonday.getDate() - i * 7);
+    const key = mon.toISOString().split('T')[0];
+    const lbl = mon.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}).replace('.','');
+    const total = weekCalls[key]||0;
+    const forms = weekForms[key]||0;
+    weeks.push({key, lbl, total, forms, nonResp: Math.max(0, total - forms)});
+  }
+
+  const maxTotal = Math.max(...weeks.map(w => w.total), 1);
+  const el = document.getElementById('weekly-chart');
+  if(!el) return;
+
+  el.innerHTML = weeks.map(w => {
+    const heightPct = Math.round(w.total / maxTotal * 100);
+    let barHTML = '';
+    if(w.total > 0){
+      barHTML = `<div style="width:100%;height:${heightPct}%;display:flex;flex-direction:column;border-radius:3px 3px 0 0;overflow:hidden;">
+        ${w.nonResp > 0 ? `<div style="flex:${w.nonResp};background:var(--blue);"></div>` : ''}
+        ${w.forms > 0 ? `<div style="flex:${w.forms};background:var(--green);"></div>` : ''}
+      </div>`;
+    }
+    return `<div class="sbar-col">
+      <span class="sbar-total">${w.total > 0 ? w.total : ''}</span>
+      <div class="sbar-area">${barHTML}</div>
+      <span class="sbar-lbl">${w.lbl}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderDailyChart(){
